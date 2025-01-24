@@ -1,0 +1,112 @@
+.fatherNotification{
+    width: 100%; 
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;   
+    background-color: #f1f2f6;    
+    .wrapperNotification{  
+        width: 80%;
+        height: 95%;       
+        display: flex;
+        flex-direction: column;   
+        align-items: center;
+        border-radius: 20px;
+        overflow: hidden; 
+        .TitleNotification{
+            height: 8%;
+            width: 100%;
+            background-color: #ee4f11;    
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            .TitleNotificationItem{
+                text-align: center;
+                color: #fff;
+                font-size: 30px;
+                font-weight: 600;    
+            }
+        }
+
+    .wrapperContainerNotification{
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .containerDevice{
+            width: 100%;    
+            background-color: #fff;
+            display: flex;
+            height: 100px;
+            justify-content: space-between; 
+            border-bottom: 0.4px solid rgb(163, 161, 161);
+            &:hover{     
+                cursor: pointer;
+                background-color: #c6c6c6;
+
+            }
+            .itemDevice{
+                display: flex;
+                height: 100%;
+                
+            }
+            .itemDeviceFirst{
+                    width: 50%;
+                    .divIconDevice{
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 30%;
+                        .iconDevice{
+                            font-size: 50px;
+                            color: rgb(252, 0, 0);
+                        }
+                    }
+                    .divIconNameAndPin{
+                        width: 70%;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-evenly;
+                        .name{
+                            font-size: 20px;
+                            font-weight: 700;    
+                            font-family: inherit;         
+                        }
+                        .divIconPin{
+                            display: flex;
+                            align-items: center;
+                            font-style: italic;
+                            font-weight: 400;
+                            color: #767676;
+                            font-size: 15px;
+                             .iconPin{
+                                font-size: 40px;
+                                color: rgb(9, 144, 255);
+                            }  
+                        }
+                       
+                    }
+            }
+
+            .itemNotificationecond{
+                width: 50%;
+                justify-content: space-around;
+                align-items: center;
+               
+                    .itemNotificationecondItem{  
+                    font-weight: 500;
+                    font-size: 20px;    
+                    .iconAcknownledge{
+                        color: rgb(0, 145, 255);
+                    }  
+                   
+                    }
+                
+                
+            }
+        }
+    }
+   
+    }
+    
+}
