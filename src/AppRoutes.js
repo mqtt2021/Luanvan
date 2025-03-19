@@ -48,7 +48,8 @@ function AppRoutes() {
                 {user && user.auth ? <Route path="/Objects" element={<Objects/>} /> : '' }
                 {user && user.auth ? <Route path="/InforObjects" element={<InforObject/>} /> : '' }
                 {user && user.auth ? <Route path="/Devices/Position/:id" element={<PositionDevice/>} /> : '' }
-                {user && user.auth ? <Route path="/HistoryDevice" element={<HistoryDevice/>} /> : '' }
+                {user && user.auth ? <Route path="/HistoryDevice/:id" element={<HistoryDevice/>} /> : '' }
+                {user && user.auth ? <Route path="/HistoryDevice/:id" element={<HistoryDevice/>} /> : '' }
                 {user && user.auth ? <Route path="/Notification" element={<Notification/>} /> : '' }    
                 {user && user.auth ? <Route path="/PositionObject/:id" element={<PositionObject/>} /> : '' }    
                 {user && user.auth ? <Route path="/EditInforObject" element={<EditInforObject/>} /> : '' }    

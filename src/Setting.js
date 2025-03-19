@@ -16,10 +16,12 @@ import { url } from './services/UserService';
 import {  toast } from 'react-toastify';
 import { useParams } from "react-router-dom";
 import { FaCheck } from "react-icons/fa";
+
+
 function Setting() {  
     const inputRef = useRef(null); // Tạo ref để tham chiếu đến input
     const navigate = useNavigate();
-    const { id} = useParams(); // Lấy tham số động từ URL
+    const {id} = useParams(); // Lấy tham số động từ URL
     const [showModalSim, setshowModalSim] = useState(false);
     const [showModalWarning, setshowModalWarning] = useState(false);
     const [name, setName] = useState('');
@@ -264,7 +266,7 @@ console.log('Device', Device)
                 </div>
                 <div className='SettingSecond'>
                      <div className='divSettingSecond'>
-                          <Link  to="/Devices/Setting/:id/Detail">      
+                          <Link  to={`/Devices/Setting/${id}/Detail`}>      
                             <div className='SettingSecondItem'
                                         // onClick={handleshowModalDetail}
                             >  
@@ -292,7 +294,9 @@ console.log('Device', Device)
                                 </div> 
                             </Link>    
                      </div>
-                     <div className='divSettingSecond'>
+
+                     
+                     {/* <div className='divSettingSecond'>
                             <Link  to="/Devices/Setting/1/ObjectTraking">                             
                                 <div className='SettingSecondItem'>
                                     <div>
@@ -303,7 +307,7 @@ console.log('Device', Device)
                                     </div>   
                                 </div>
                             </Link> 
-                     </div>
+                     </div> */}
                                        
                             <div 
                                   className='SettingSecondItem DeleteDevice'

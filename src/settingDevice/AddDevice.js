@@ -16,8 +16,6 @@ function ModalAddDevice({ show , handleClose}) {
   const [newDevice, setnewDevice] = useState({id:''})   
   const [loading, setLoading] = useState(false); // Thêm trạng thái loading    
   const [listAllDevices, setlistAllDevices] = useState([]) 
-
-  
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -62,58 +60,89 @@ function ModalAddDevice({ show , handleClose}) {
     isDragging.current = false;
   };
 
-  
-
   const handlePostAddDevice = async () => {   
     try {
-      const response = await axios.post(`${url}/GPSDevice/CreateNewGPSDevice` , newDevice);
-      console.log(response)  
+      const response = await axios.patch(`${url}/GPSDevice/UpdateGPSDeviceStatus?GPSDeviceId=${idDevice}` , newDevice);   
+      console.log(response)       
          
-      if(response.data === true){
-              toast.success('Thêm thiết bị thành công')
-              sessionStorage.setItem('idDevice', idDevice);
+      if(response.data === 'Update successful!'){
+
+              sessionStorage.setItem('idDevice', idDevice);     
+              toast.success('Thêm thiết bị thành công')     
+              setidDevice('')
+              setnameDevice('')
               handleClose()             
       }
       else{
-        toast.error('Thêm thiết bị không thành công')
-      }
+        toast.error('Thêm thiết bị không thành công')   
+      }                                                                                 
        
-    } catch (error) {
+    } catch (error) {                          
       toast.error('Đăng kí không thành công')
-    }
-
-
+    }                            
   };
 
-     const handleAddDevice = () => {
+  const handleAddDevice = () => {
         if(idDevice === '' || nameDevice === ''){
           toast.error('Bạn chưa nhập đủ thông tin')  
           return  
         }
         
               if(listAllDevices.length > 0){
-                   const checkid = listAllDevices.find((item) => item.id === idDevice);
+                   
+                   const checkid = listAllDevices.find((item) => item.id === idDevice && item.customerPhoneNumber !== 'NSX');
+                   console.log('checkid', checkid)   
+
                    if(checkid){
                      toast.error('Id thiết bị đã tồn tại')  
                      return
                    }
-                   const checkName = listAllDevices.find((item) => item.name === nameDevice);
-                   if(checkName){  
-                     toast.error('Tên thiết bị đã tồn tại')  
-                     return
-                   } 
+
+                   const checkidValid = listAllDevices.find((item) => item.id === idDevice);
+                  
+
+                   if(checkidValid){
+                   }
+                   else{
+                    toast.error('Bạn đã nhập sai ID thiết bị')  
+                    return
+                   }
+
+                  
+
+
+                  //  const checkName = listAllDevices.find((item) => item.name === nameDevice);
+
+                  //  if(checkName){  
+                  //    toast.error('Tên thiết bị đã tồn tại')  
+                  //    return
+                  //  } 
               }
 
-      
-     
 
+              const phoneNumer = sessionStorage.getItem('phoneNumer');
+    
         setnewDevice({
-          id: idDevice,    
+
+          id: idDevice,
+          customerPhoneNumber: phoneNumer,   
           longitude: 0,
-          latitude: 0,  
-          name: nameDevice
+          latitude: 0,
+          name: nameDevice,
+          imagePath: "",
+          battery: 28,
+          temperature: 0,
+          stolen: false,
+          bluetooth: "False",
+          timeStamp: "2025-02-23T22:30:25",
+          smsNumber: "",
+          package: "",
+          registationDate: "0001-01-01T00:00:00",
+          expirationDate: "0001-01-01T00:00:00"
         })
-      }
+
+        
+  }
   
       const getAllDevices = async () => {   
         let success = false;
@@ -135,8 +164,6 @@ function ModalAddDevice({ show , handleClose}) {
         }
       };
 
-      
-
       useEffect(() => {
         if(newDevice.id !== ''){
           handlePostAddDevice()
@@ -145,10 +172,10 @@ function ModalAddDevice({ show , handleClose}) {
 
       useEffect(() => {
         getAllDevices()
-      },[])  
-
-    
-
+      },[])
+      
+      
+      console.log('newDevice',  newDevice)   
 
   return (
     <div  className="modal show"

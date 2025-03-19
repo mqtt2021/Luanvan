@@ -7,7 +7,7 @@ import L from 'leaflet'
 import imgObject from './asset/images/ImgObject.jpg'  
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import { TbDimensions } from "react-icons/tb";
-import { LuNotebookText } from "react-icons/lu";
+// import { LuNotebookText } from "react-icons/lu";
 import { GiPositionMarker } from "react-icons/gi";
 import { PiMapPinSimpleAreaBold } from "react-icons/pi";
 import { FaFile } from "react-icons/fa";
@@ -112,7 +112,7 @@ function InforObject() {
                         <div className='informationDeviceItem'>
                           <div className='informationDeviceItemFirst'>
                               <div className='informationDeviceItemFirstIcon'>
-                                  <LuNotebookText className='informationDeviceItemIcon'/>
+                                  {/* <LuNotebookText className='informationDeviceItemIcon'/> */}
                               </div>  
                               <div className='informationDeviceItemFirstTitle'>Mô tả:</div>
                           </div> 

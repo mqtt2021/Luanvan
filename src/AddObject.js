@@ -4,10 +4,10 @@ import './AddObject.scss'
 import Table from 'react-bootstrap/Table';
 import { MapContainer, TileLayer, Marker, Popup, useMapEvent   } from "react-leaflet";
 import L from 'leaflet'
-import imgObject from './asset/images/ImgObject.jpg'  
+// import imgObject from './asset/images/  ImgObject.jpg'  
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import { TbDimensions } from "react-icons/tb";
-import { LuNotebookText } from "react-icons/lu";
+// import { LuNotebookText } from "react-icons/lu";
 import { GiPositionMarker } from "react-icons/gi";
 import { PiMapPinSimpleAreaBold } from "react-icons/pi";
 import { FaFile } from "react-icons/fa";
@@ -36,12 +36,12 @@ function AddObject() {
       { time: '04/01/2025 01:00:00', pin: 22 },
     ];
 
-       const markerIcon = new L.Icon({
-          iconUrl: require("./asset/images/maker_user.png"),
-          iconSize: [25, 30],   
-          iconAnchor: [15, 30], //[left/right, top/bottom]     
-          popupAnchor: [0, 0], //[left/right, top/bottom]
-      })
+      //  const markerIcon = new L.Icon({
+      //     iconUrl: require("./asset/images/maker_user.png"),
+      //     iconSize: [25, 30],   
+      //     iconAnchor: [15, 30], //[left/right, top/bottom]     
+      //     popupAnchor: [0, 0], //[left/right, top/bottom]
+      // })
 
 
     const handleshowModalUpdateFirmware= () => {   
@@ -218,9 +218,9 @@ function AddObject() {
                         </div>
                        
                         <div className='wrapAddObjectItem'>
-                          <div className='wrapAddObjectItemFirst'>
+                          <div className='wrapAddObjectItemFirst'>  
                               <div className='divIconAddObject'>
-                                  <LuNotebookText className='IconAddObject'/>
+                                  {/* <LuNotebookText className='IconAddObject'/> */}
                               </div>  
                               <div className='titleAddObject'>Mô tả:</div>
                           </div> 

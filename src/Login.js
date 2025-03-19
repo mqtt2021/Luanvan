@@ -50,8 +50,6 @@ function Login() {
       getAllCustomer()
     },[])
     
-    
-    
     const handleLogin =  async () => {
            
       if(!userName || !password ){

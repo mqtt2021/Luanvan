@@ -21,6 +21,10 @@ import { url } from './services/UserService';
 function PositionObject() {       
    
     const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext);
+
+
+
+    
     // const url = 'https://sawacoapi.azurewebsites.net' 
     const positionObject = new L.Icon({ // vị trí GPS khi bị trộm đi qua
         iconUrl: require("./asset/images/position.png" ),

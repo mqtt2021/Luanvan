@@ -18,8 +18,10 @@ import { RiChatHistoryFill } from "react-icons/ri";
 import {Link, useNavigate} from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { url } from './services/UserService';
+
 function PositionDevice() {          
-   
+    const { id} = useParams(); // Lấy tham số động từ URL
+
     const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext);
     // const url = 'https://sawacoapi.azurewebsites.net' 
     const positionDevice = new L.Icon({ // vị trí GPS khi bị trộm đi qua
@@ -69,18 +71,14 @@ function PositionDevice() {
         }
       }
     };
-    const { id} = useParams(); // Lấy tham số động từ URL
-
 
     useEffect(() => { 
-
       setCenter({lat: Device.latitude,lng: Device.longitude })
-    
-  }, [Device])
+      getAddressFromCoordinates(Device.latitude,  Device.longitude );   
+    }, [Device])
 
 
     useEffect(() => { 
-       
         getDeviceById()
         setPercentBattery(0)
         setMakerOpenPopup({})
@@ -163,6 +161,23 @@ function PositionDevice() {
 
          }
     },[selectedLogger])
+
+
+    const [address, setAddress] = useState("");
+
+  
+    const getAddressFromCoordinates = async (lat, lon) => {
+      try {   
+        const response = await axios.get(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+        const data = response.data;
+        setAddress(data.display_name || "Không tìm thấy địa chỉ");
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+        setAddress("Đang xác định vị trí");      
+      }    
+    };
 
 
 
@@ -408,6 +423,24 @@ function PositionDevice() {
                           center={center} 
                           zoom={ZOOM_LEVEL}     
                           ref={mapRef}>
+
+
+                         {/* Div hiển thị trên bản đồ */}
+                          <div style={{
+                            position: "absolute",
+                            top: "10px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            background: "rgba(255, 255, 255, 0.9)",
+                            padding: "10px 20px",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 5px rgba(0, 0, 0, 0.3)",
+                            zIndex: 1000,
+                            fontWeight: "bold"
+                          }}>
+                            {`Vị trí: ${address}`}
+                          </div>
+
                         <TileLayer
                              attribution ='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -464,12 +497,12 @@ function PositionDevice() {
 
 
                     </MapContainer>
-      </div>
-      <div className='filter'>        
+                  </div>
+                    <div className='filter'>        
                    
                      <div className='filterItem'>
                                 <div className='filterItemdiv'>
-                                   <Link to="/HistoryDevice">
+                                   <Link to={`/HistoryDevice/${id}`}>
                                   <div className = 'itemDeviceSecondItem'>
                                       <div>
                                           <RiChatHistoryFill className='itemDeviceSecondItemIcon'/>

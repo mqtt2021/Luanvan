@@ -9,6 +9,28 @@
         flex-direction: column;
         align-items: center;  
 
+
+        .loadingContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+          }
+          
+          .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.2);
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+          }
+          
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        
         .MapTitle{       
            display: none;
 
@@ -41,7 +63,7 @@
             height: 60px;  
             align-items: center;  
         .divInputFindDevices{  
-                width: 70%;       
+                width: 90%;       
         }
         .divAddDevices{
                 width: 6%; 
@@ -54,14 +76,12 @@
                         color: rgb(242, 76, 35);
                     }
                 }
-
                 @media (max-width: 768px) {
                     width: 30%;  
                     display: flex;
                     justify-content: center;  
             
-                }
-                
+                }      
         }
 
         @media (max-width: 768px) {
@@ -72,12 +92,16 @@
         }
 
     }
+
+
     .wrapperContainerDevices{
+        
         width: 80%;
         margin-top: 20px;
         display: flex;
         flex-direction: column;
         align-items: center;
+      
         .containerDevice{
             
             box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);
@@ -85,13 +109,13 @@
             border-radius: 10px;   
             overflow: hidden;
             background-color: #fff;
-            
             display: flex;
             height: 100px;
             justify-content: space-between;
             .itemDevice{
                 display: flex;
                 height: 100%;
+                
                 
             }
             .itemDeviceFirst{
@@ -126,6 +150,13 @@
                         }
                        
                     }
+
+                    @media (max-width: 768px) {                             
+                        width: 40%;
+                       
+                        padding-left: 4%;
+                
+                    }
             }
 
             .itemDeviceSecond{
@@ -159,8 +190,7 @@
 
 
                 @media (max-width: 768px) {
-                    width: 100%;
-                    
+                    width: 65%;
                     justify-content: space-between;
 
                     a{
@@ -182,7 +212,7 @@
     
                         }
                         .itemDeviceSecondItemIcon{
-                            font-size: 30px;
+                            font-size: 25px;
                             color: red;
                         }
                     }
@@ -194,13 +224,17 @@
             }
         }
 
+
         @media (max-width: 768px) {
             width: 100%;
-    
+           
         }
+        
 
     }
    
+
+           
    
 
 

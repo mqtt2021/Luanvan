@@ -11,12 +11,12 @@ import { UserContext } from './usercontext';
 function Connect({ show , handleClose }) {          
   const { idObjectConnect, setidObjectConnect } = useContext(UserContext);  
   const [fileName, setFileName] = useState("");
-  
+  const [selectedDevice, setSelectedDevice] = useState(null);
   const [ObjectConnect, setObjectConnect] = useState({id:''})   
   const [loading, setLoading] = useState(false); // Thêm trạng thái loading    
   const [listAllDevices, setlistAllDevices] = useState([]) 
+  const [isClickButtonConnect, setisClickButtonConnect] = useState(false) 
 
-  
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -87,22 +87,27 @@ function Connect({ show , handleClose }) {
     }
   };
 
-  const handlePostAddDevice = async () => {   
+  const callAPIConnecDevice = async () => {   
     try {
-      const response = await axios.patch(`${url}/GPSDevice/CreateNewGPSDevice` , {
-        phoneNumber: "string",
-        deviceId: "string",
-        objectId: "string"
+
+      const phoneNumer = sessionStorage.getItem('phoneNumer');
+      const response = await axios.patch(`${url}/GPSObject/SetupDeviceForObject` , {
+        phoneNumber: phoneNumer,  
+        deviceId: selectedDevice,  
+        objectId: idObjectConnect   
       });
       console.log(response)  
          
-      if(response.data === true){
-              toast.success('Thêm thiết bị thành công')
-            
-              handleClose()             
+      if(response.data === 'Setup successfully!'){
+              // toast.success('Kết nối với thiết bị thành công')
+              // handleClose()   
+              CallAPIGetObjectById()
+              
+
+              
       }
       else{
-        toast.error('Thêm thiết bị không thành công')
+        toast.error('Kết nối thiết bị không thành công')
       }
        
     } catch (error) {
@@ -112,26 +117,16 @@ function Connect({ show , handleClose }) {
 
   };
 
+
+
      const handleConnectObjectWithDevice = () => {
-       
-        
-              // if(listAllDevices.length > 0){
-              //      const checkid = listAllDevices.find((item) => item.id === idDevice);
-              //      if(checkid){
-              //        toast.error('Id thiết bị đã tồn tại')  
-              //        return
-              //      }
-              //      const checkName = listAllDevices.find((item) => item.name === nameDevice);
-              //      if(checkName){  
-              //        toast.error('Tên thiết bị đã tồn tại')  
-              //        return
-              //      } 
-              // }
-      
+            callAPIConnecDevice()
+            setisClickButtonConnect(true)
+
       }
   
-      const getAllDevices = async () => {   
-        let success = false;
+      const callAPIgetAllDevices = async () => {     
+        let success = false;   
         while (!success) {
           try {
             const response = await axios.get(`${url}/GPSDevice/GetAllGPSDevices`);  
@@ -143,9 +138,6 @@ function Connect({ show , handleClose }) {
               const phoneNumer = sessionStorage.getItem('phoneNumer');
               const listDevice = LoggerData.filter((item) => item.customerPhoneNumber === phoneNumer);
               setlistAllDevices(listDevice);      
-         
-             
-      
               success = true; 
             } else {
     
@@ -160,18 +152,43 @@ function Connect({ show , handleClose }) {
       
 
       useEffect(() => {
-        if(show){     
-          console.log('cccccc')                              
-          CallAPIGetObjectById()    
+        
+        if(isClickButtonConnect){                                
+          if(ObjectConnect.connected){
+              toast.success('Kết nối với thiết bị thành công')
+              setObjectConnect({id:''})
+              setisClickButtonConnect(false)
+              handleClose() 
+          }   
+          else{
+            toast.error('Thiết bị đã được kết nối trước đó')
+            setisClickButtonConnect(false)
+          }                
+          
+        }    
+          
+      },[ObjectConnect])
+      
+      
+      useEffect(() => {
+        if(show){                                
+          CallAPIGetObjectById()      
         }    
       },[show]) 
 
       useEffect(() => {
-        getAllDevices()
+        callAPIgetAllDevices()  
       },[])  
 
+      const handleDeviceChange = (event) => {
+            setSelectedDevice(event.target.value); // Cập nhật thiết bị đã chọn
+      };
+
+     
+
+   
     
-console.log('idObjectConnect', idObjectConnect)  
+console.log('ObjectConnect', ObjectConnect)     
       
   return (   
     <div  className="modal show"
@@ -182,7 +199,7 @@ console.log('idObjectConnect', idObjectConnect)
         </Modal.Header>   
         <Modal.Body>
         <form>
-            <div className="form-group">
+            {/* <div className="form-group">
              <div className='SettingFirst'>
                                                         <div className="Wrapimage">
                                                         <div
@@ -223,15 +240,17 @@ console.log('idObjectConnect', idObjectConnect)
                                                           
                                                           
                                                       </div>
-            </div>
+            </div> */}
 
             <div className="form-group">
-              <label for="exampleInputJob">Thiết bị kết nối</label>
-              <select class="form-select" aria-label="Default select example">
-                <option selected>Open this select menu</option>
+              <label for="exampleInputJob">Chọn thiết bị kết nối</label>
+              <select class="form-select" aria-label="Default select example"
+                    onChange={handleDeviceChange} // Gọi hàm khi người dùng thay đổi lựa chọn
+              >
+                <option selected></option>
 
                 {listAllDevices.map((item , index) => (    
-                      <option value={index}>{item.name}</option>
+                      <option value={item.id}>{item.name}</option>
                 ))}
 
               </select>

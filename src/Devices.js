@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react'
+import React,{useState,useEffect, useContext} from 'react'
 import { RiGpsFill } from "react-icons/ri";
 import { TiBatteryCharge } from "react-icons/ti";
 import './Devices.scss'
@@ -11,9 +11,19 @@ import ModalAddDevice from './settingDevice/AddDevice';
 import axios from 'axios';
 import { url } from './services/UserService';
 import { toast } from 'react-toastify';
-
+import { UserContext } from './usercontext';   
 function Devices() {
- const [listAllDevices,setlistAllDevices] = useState([]) 
+  const [isLoading, setIsLoading] = useState(true); // Thêm state để quản lý trạng thái loading
+  const { center, zoomLevel, setZoomLevel,
+            percentBattery, getPositionUser, setCenter,       
+            makerOpenPopup, pressPositionWarning,    
+            setChangeNameFromMapToHeader, setMakerOpenPopup,   
+            pressPercentBattery, setgetLoggerStolen, displayNav, setDisplayNav, displayRoutesTwoPoint, setDisplayRoutesTwoPoint,
+            isButtonDisabled, setIsButtonDisabled , accessRouteRegister, listAllDevices, setlistAllDevices,
+            inforCustomer, setInforCustomer, phoneNumberCustomer, setPhoneNumberCustomer, listObject, setlistObject    
+          } =  useContext(UserContext);  
+
+  // const [listAllDevices,setlistAllDevices] = useState([]) 
   const [showModalAddDevice, setshowModalAddDevice] = useState(false);
   const [Device, setDevice] = useState({id:'', name: ''});
   const handleshowModalAddDevice= ()=> {   
@@ -91,6 +101,7 @@ function Devices() {
   } 
 
   const getAllDevices = async () => {   
+    setIsLoading(true); // Bắt đầu loading
     let success = false;
     while (!success) {
       try {
@@ -103,9 +114,6 @@ function Devices() {
           const phoneNumer = sessionStorage.getItem('phoneNumer');
           const listDevice = LoggerData.filter((item) => item.customerPhoneNumber === phoneNumer);
           setlistAllDevices(listDevice);      
-     
-         
-  
           success = true; 
         } else {
 
@@ -115,6 +123,7 @@ function Devices() {
         await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
       }
     }
+    setIsLoading(false); // Bắt đầu loading
   };
 
   useEffect(() => { 
@@ -148,8 +157,16 @@ function Devices() {
                   </div>   
               </div>
 
-              {listAllDevices.length > 0 && listAllDevices.map((item , index)=>(
-                <div
+              {
+              isLoading ? (
+                    <div className="loadingContainer">
+                            <div className="spinner"></div> {/* Hiển thị hiệu ứng loading */}
+                            <p>Đang tải...</p>
+                    </div>
+              ) : 
+
+              (listAllDevices.length > 0 && listAllDevices.map((item , index)=>(
+                <div   
                   className='wrapperContainerDevices'  
               >        
                 <div className='containerDevice'>
@@ -163,7 +180,7 @@ function Devices() {
                           </div>
                           <div className='divIconPin'>
                             <TiBatteryCharge className='iconPin'/>
-                            <div>{item.battery}</div>      
+                            <div>{`${item.battery} %`}</div>      
                           </div>
                       </div>
                   </div>
@@ -197,57 +214,10 @@ function Devices() {
                 </div>
               </div>
                                                
-              ))}
+              )))
+              }
+
              
-
-
-              {/* <div
-                  className='wrapperContainerDevices'
-              >        
-                <div className='containerDevice'>
-                  <div className='itemDevice itemDeviceFirst'>
-                      <div className='divIconDevice'>
-                          <RiGpsFill className='iconDevice'/>
-                      </div>
-                      <div className='divIconNameAndPin'>
-                          <div className='name'>
-                            GPS 02
-                          </div>
-                          <div className='divIconPin'>
-                            <TiBatteryCharge className='iconPin'/>
-                            <div>50%</div>   
-                          </div>
-                      </div>
-                  </div>
-                  <div className='itemDevice itemDeviceSecond'>
-                      <Link to="/map"> 
-                      <div className = 'itemDeviceSecondItem'>  
-                        <div>
-                          <GiPositionMarker className='itemDeviceSecondItemIcon'/>  
-                        </div>
-                        <div>
-                          Vị trí
-                        </div>
-                      </div>
-                      </Link>  
-                      
-                      <Link to="/Devices/Setting/2">         
-                        <div className = 'itemDeviceSecondItem'>
-                          <div>
-                            <IoMdSettings className='itemDeviceSecondItemIcon'/>
-                          </div>
-                          <div>
-                            Thiết lập     
-                          </div>
-                        </div>
-                      </Link>
-                      
-                      <div>
-
-                      </div>
-                  </div>
-                </div>
-              </div> */}
               
       </div>   
                 <ModalAddDevice   

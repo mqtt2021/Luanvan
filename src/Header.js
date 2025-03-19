@@ -26,13 +26,20 @@ import { IoNotifications } from "react-icons/io5";
 import { url } from './services/UserService';
 
 function Header() {
+
+  const [listNotifications, setListNotifications] = useState([]);
+  const [phone, setPhone] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+
   const location = useLocation();
   const [valueBattery, setValueBattery] = useState(50); // Giá trị mặc định là 50
       
-  const { setCenter, setZoomLevel, setPercentBattery, 
+  const { 
+          setCenter, setZoomLevel, setPercentBattery, 
           setGetPositionUser, setMakerOpenPopup, 
           setPressPositionWarning, changeNameFromMapToHeader,
-          setPressPercentBattery, getLoggerStolen, displayNav, setDisplayNav, displayRoutesTwoPoint, setDisplayRoutesTwoPoint,
+          setPressPercentBattery, getLoggerStolen, displayNav, setDisplayNav, 
+          displayRoutesTwoPoint, setDisplayRoutesTwoPoint,
           isButtonDisabled, setIsButtonDisabled,logout, user
     
         } = useContext(UserContext);
@@ -175,14 +182,63 @@ function Header() {
          
     }
   }   
+
+
+       const getNotification = async () => {
+            let success = false;  
+            while (!success) {   
+              try {
+                const response = await axios.get(`${url}/Notification/GetNotificationByPhoneNumber?phoneNumber=${phone}`);   
+                const NotificationsData = response.data;
+              
+                // Kiểm tra nếu dữ liệu nhận được hợp lệ
+                if (NotificationsData) {    
+                  // const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
+                
+
+                  const sortedData = NotificationsData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                  // Đếm số lượng thông báo chưa đọc
+                  const unreadCount = NotificationsData.filter((item) => !item.isAcknowledge).length;
+                  setUnreadCount(unreadCount)
+                  setListNotifications(sortedData);    
+                  console.log(sortedData);   
+                
+                  success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
+                } else {
+                  alert('ReLoad');
+                }
+              } catch (error) {
+                console.error('getNotification error, retrying...', error);
+                await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+              }
+            }
+      };
+
+      useEffect(() => {  
+        const phoneNumer = sessionStorage.getItem('phoneNumer');    
+        setPhone(phoneNumer)    
+      }, [])
+      
+      useEffect(() => { 
+        if(phone !== ''){
+          getNotification();
+        }                     
+      }, [phone])
+
+
   console.log('userHeader', user)
   return (    
-    <div className='header font-barlow'>                        
+    <div className='header font-barlow'>  
+
+
                           <div className='Menu' onClick={handleDisplayNavigation}>
                                 <div><IoMenu/></div>                                
                                 {/* {listLoggerStolen.length > 0  && <div className='amountOfWarning'>{listLoggerStolen.length}</div>} */}
                                    
                           </div> 
+
+
                           {/* <div className='MapTitle'>
                                       <div className='MapTitleItem'>
                                                 Bản đồ tổng quan      
@@ -292,12 +348,23 @@ function Header() {
                                               
                                       >
                                           <div className='NavigationItemIcon'>
-                                              <div><IoNotifications/></div>
-                                              <div>Thông báo</div>     
+                                              <div className=''>
+
+                                                    <IoNotifications/>
+                                              
+                                              </div>
+                                               
+                                              <div>Thông báo</div> 
+
+                                              {unreadCount > 0 && (
+                                                  <div className="notificationBadge">{unreadCount}</div>
+                                              )}  
+
+
                                           </div>    
 
                                       </div> 
-                                  </Link>
+                                  </Link>     
                                   <Link  to="/">             
                                     <div className='NavigationItem'>
                                           <div 

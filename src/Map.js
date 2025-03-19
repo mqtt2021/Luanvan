@@ -17,13 +17,16 @@ import ModelConfirm from './ModelConfirm';
 import { UserContext } from './usercontext';
 import { url } from './services/UserService';
 function Map() {  
+
+
   const { center, zoomLevel, setZoomLevel,
-          percentBattery, getPositionUser, setCenter,
-          makerOpenPopup, pressPositionWarning, 
-          setChangeNameFromMapToHeader, setMakerOpenPopup,
+          percentBattery, getPositionUser, setCenter,       
+          makerOpenPopup, pressPositionWarning,    
+          setChangeNameFromMapToHeader, setMakerOpenPopup,   
           pressPercentBattery, setgetLoggerStolen, displayNav, setDisplayNav, displayRoutesTwoPoint, setDisplayRoutesTwoPoint,
-          isButtonDisabled, setIsButtonDisabled , accessRouteRegister    
-        } =  useContext(UserContext);
+          isButtonDisabled, setIsButtonDisabled , accessRouteRegister, listAllDevices,setlistAllDevices,
+          inforCustomer, setInforCustomer, phoneNumberCustomer, setPhoneNumberCustomer, listObject, setlistObject    
+        } =  useContext(UserContext);      
   const locationUser = useGeoLocation()  // lấy vị trí của người thay pin
   const [showModalChangeName, setshowModalChangeName] = useState(false); // hiển thị bảng đổi tên
   const [ZOOM_LEVEL, setZOOM_LEVEL] = useState(9) // độ zoom map
@@ -32,12 +35,12 @@ function Map() {
   const [positionUser, setpositionUser] = useState({ latitude: "", longtitude: "" }); //vị trí của người thay pin    
   const [isShowPositionUser, setIsShowPositionUser] = useState(false); // hiển thị vị trí người thay pin
   const [listLoggerBattery,setlistLoggerBattery] = useState([]) // danh sách Logger cần thay pin
-  const [listLoggerStolen,setlistLoggerStolen] = useState([]) // danh sách Logger bị trộm
+  const [listDevicesStolen,  setlistDevicesStolen] = useState([]) // danh sách Logger bị trộm
   const [dataLoggerEdit,setdataLoggerEdit] = useState({}) // chọn dataLogger cần sửa tên
-  const [isDisplayPositionCabinet, setIsDisplayPositionCabinet] = useState(false);  // hiển thị tủ điện
+  const [isDisplayPosition, setIsDisplayPosition] = useState(false);  // hiển thị tủ điện
   const [PositionCabinet, setPositionCabinet] = useState({});  // hiển thị tủ điện
-  const [listAllDevices,setlistAllDevices] = useState([])   
-  // const url = 'https://sawacoapi.azurewebsites.net'
+  
+  // const url = 'https://sawacoapi.azurewebsites.net'   
   
   const wakeup = new L.Icon({ // marker bình thường
     iconUrl: require("./asset/images/position.png" ),
@@ -101,12 +104,18 @@ function Map() {
     while (!success) {
       try {
         const response = await axios.get(`${url}/GPSDevice/GetAllGPSDevices`);  
-        const LoggerData = response.data;  
-        // Kiểm tra nếu dữ liệu nhận được hợp lệ
-        if (LoggerData && LoggerData.length > 0) {
+        const DevicesData = response.data;  
+        console.log(DevicesData)  
+        // Kiểm tra nếu dữ liệu nhận được hợp lệ   
+        if (DevicesData && DevicesData.length > 0) {   
           const phoneNumer = sessionStorage.getItem('phoneNumer');
-          const listDevice = LoggerData.filter((item) => item.customerPhoneNumber === phoneNumer);
-          setlistAllDevices(listDevice);      
+          const listDevice = DevicesData.filter((item) => item.customerPhoneNumber === phoneNumer);
+          const listDeviceStolen = listDevice.filter((item) => item.stolen === true);
+   
+
+          setlistDevicesStolen(listDeviceStolen)
+
+          setlistAllDevices(listDevice);        
           success = true; 
         } else {
         }
@@ -117,21 +126,93 @@ function Map() {
     }
   };
 
+
+  const getInforCustomer = async () => {   
+    let success = false;
+    while (!success) {
+      try {
+        const response = await axios.get(`${url}/Customer/GetAllCustomers`);  
+        const CustomerData = response.data;  
+        // Kiểm tra nếu dữ liệu nhận được hợp lệ
+        if (CustomerData && CustomerData.length > 0) {
+          console.log(CustomerData)
+          const phoneNumer = sessionStorage.getItem('phoneNumer');  
+          const Customer = CustomerData.find((item) => item.phoneNumber === phoneNumer);
+          setInforCustomer(Customer);       
+          success = true; 
+        } else {
+        }
+      } catch (error) {
+        console.error('getInforCustomers error, retrying...', error);  
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+      }
+    }
+  };
+
+  const getAllObject = async () => {   
+    let success = false;
+    while (!success) {
+      try {
+        const response = await axios.get(`${url}/GPSObject/GetObjectByPhoneNumber?phoneNumber=${phoneNumberCustomer}`);    
+        const ObjectsData = response.data; 
+        console.log(ObjectsData)   
+        // Kiểm tra nếu dữ liệu nhận được hợp lệ
+        if (ObjectsData && ObjectsData.length > 0) {      
+          const Objects = ObjectsData.filter((item) => item.connected === true);
+          setlistObject(Objects);         
+          success = true; 
+        } else {
+        }
+      } catch (error) {
+        console.error('getAllObject error, retrying...', error);  
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+      }
+    }
+  };
+
+
 useEffect(() => {
-  getAllDevices()
+  const phoneNumer = sessionStorage.getItem('phoneNumer');  
+  setPhoneNumberCustomer(phoneNumer)
+  getAllDevices()   
+  getInforCustomer();
 }, []);  
 
-
-useEffect(() => {  
-  if(listLoggerStolen.length > 0){
-
-    setgetLoggerStolen(true)
-    if(makerOpenPopup.id){
-      const LoggerOpenPopup = listLoggerStolen.find((item,index) => item.id === makerOpenPopup.id )
-      setMakerOpenPopup(LoggerOpenPopup) 
-    }
+useEffect(() => {
+  if(phoneNumberCustomer !== ''){
+    getAllObject();
   }
-}, [listLoggerStolen])
+}, [phoneNumberCustomer]);
+
+
+// useEffect(() => {  
+//   if(listLoggerStolen.length > 0){
+
+//     setgetLoggerStolen(true)   
+//     if(makerOpenPopup.id){
+//       const LoggerOpenPopup = listLoggerStolen.find((item,index) => item.id === makerOpenPopup.id )
+//       setMakerOpenPopup(LoggerOpenPopup) 
+//     }
+//   }
+// }, [listLoggerStolen])
+
+
+
+    const [address, setAddress] = useState("");
+
+
+    const getAddressFromCoordinates = async (lat, lon) => {
+      try {
+        const response = await axios.get(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+        const data = response.data;
+        setAddress(data.display_name || "Không tìm thấy địa chỉ");
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+        setAddress("Không thể lấy địa chỉ");
+      }
+    };
 
  
 
@@ -351,11 +432,11 @@ function convertDateTime(inputString) {
            if(makerOpenPopup.id === 'c01b'){
 
             setPositionCabinet({lat: ListPositionCabinet[0].lat , lng: ListPositionCabinet[0].lng , name : ListPositionCabinet[0].name  })
-            setIsDisplayPositionCabinet(true)
+            //setIsDisplayPositionCabinet(true)
            }
            if(makerOpenPopup.id === 'c02b'){
             setPositionCabinet({lat: ListPositionCabinet[1].lat , lng: ListPositionCabinet[1].lng , name : ListPositionCabinet[1].name})
-            setIsDisplayPositionCabinet(true)
+            //setIsDisplayPositionCabinet(true)
            }
 
           
@@ -363,7 +444,48 @@ function convertDateTime(inputString) {
     }
   }, [isDisplayMakerOpenPopup, pressPositionWarning]); 
   
-  console.log('map', accessRouteRegister)
+  
+
+
+
+  const [deviceAddresses, setDeviceAddresses] = useState({});
+  useEffect(() => {
+
+    if(listAllDevices.length > 0){
+      const fetchAddresses = async () => {
+        let newAddresses = {};
+  
+        for (const device of listAllDevices) {
+          try {
+            const response = await axios.get(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${device.latitude}&lon=${device.longitude}`
+            );
+            newAddresses[device.id] = response.data.display_name || "Không tìm thấy địa chỉ";
+          } catch (error) {
+            console.error("Lỗi khi lấy địa chỉ:", error);
+            newAddresses[device.id] = "Không thể lấy địa chỉ";
+          }
+        }
+  
+        setDeviceAddresses(newAddresses);
+      };
+  
+      if (listAllDevices.length > 0) {
+        fetchAddresses();
+      }
+    }
+
+    setIsDisplayPosition(true)
+   
+  }, [listAllDevices]); // Chỉ chạy khi listAllDevices thay đổi
+
+  const removePostalCode = (address) => {
+
+    if (!address) return "Không tìm thấy địa chỉ"; // Xử lý khi địa chỉ undefined/null
+  
+    return address.replace(/\d+\s*(?=Việt Nam)/, "").trim();
+  };
+
 
   return (
     <>
@@ -556,13 +678,13 @@ function convertDateTime(inputString) {
                                     </Popup>     
                                   </Marker>
                                 } */}
-                                 
-   
-                                {listAllDevices.length > 0 ? listAllDevices.map((item , index)=>(
+                                    
+                                                                                                                  
+                                { listAllDevices.length > 0 ? listAllDevices.map((item , index)=> (
                                  
                                   <Marker     
                                       className='maker'
-                                      position={[item.latitude , item.longitude]}
+                                      position={[item.latitude , item.longitude]}  
                                       icon= { wakeup }   
                                       key={index}     
                                       zIndexOffset={  4000 }                             
@@ -571,13 +693,34 @@ function convertDateTime(inputString) {
                                         <div className='div-popup'>
                                           <div className='infor'>
                                             <div className ='inforItem'>   
-                                                <div className='title'>Tên:</div>
+                                                <div className='title'>Đối tượng được theo dõi:</div>
+                                                <div className='value'>
+                                                      {listObject.find(device => device.gpsDeviceId === item.id )?.name ?? "Không tìm thấy thiết bị"}
+                                                </div>
+                                            </div> 
+                                            <div className ='inforItem'>   
+                                                <div className='title'>Thiết bị theo dõi:</div>
                                                 <div className='value'>{item.name}</div>
-                                            </div>    
+                                            </div> 
+
                                             <div className ='inforItem'>
-                                                <div className='title'>Mức pin:</div>
-                                                <div className='value'>{`${item.battery}%`}</div>
-                                            </div>                                            
+                                                <div className='title'>Mức pin thiết bị:</div>
+                                                <div className='value'>
+                                                  <div className='value'>{item.battery} %</div>   
+                                                </div>
+                                            </div> 
+                                            <div className ='inforItem'>
+                                                <div className='title'>Vị trí hiện tại:</div>
+                                                <div className='value'>
+                                                  <div className='value'>
+                                                        <div className="value">{deviceAddresses[item.id] ?? "Đang tải..."}</div>
+                                                  </div>   
+                                                </div>
+                                            </div> 
+
+
+
+
                                           </div>                                                                                                
                                             {/* <div className='button'>
                                               <button type="button" class="btn btn-primary" data-mdb-ripple-init
@@ -590,6 +733,65 @@ function convertDateTime(inputString) {
                                 </Marker> 
                                  
                                 )) : ''}
+
+
+
+
+
+
+                                { listDevicesStolen.length > 0 ? listDevicesStolen.map((item , index)=> (
+                                    
+                                 <Marker     
+                                     className='maker'
+                                     position={[item.latitude , item.longitude]}  
+                                     icon= { warning }      
+                                     key={index}     
+                                     zIndexOffset={  4000 }                             
+                                 >   
+                                      <Popup>
+                                       <div className='div-popup'>
+                                         <div className='infor'>
+                                           <div className ='inforItem'>   
+                                               <div className='title'>Đối tượng được theo dõi:</div>
+                                               <div className='value'>
+                                                     {listObject.find(device => device.gpsDeviceId === item.id )?.name ?? "Không tìm thấy thiết bị"}
+                                               </div>
+                                           </div> 
+                                           <div className ='inforItem'>   
+                                               <div className='title'>Thiết bị theo dõi:</div>
+                                               <div className='value'>{item.name}</div>
+                                           </div> 
+
+                                           <div className ='inforItem'>
+                                               <div className='title'>Mức pin thiết bị:</div>
+                                               <div className='value'>
+                                                 <div className='value'>{item.battery} %</div>   
+                                               </div>
+                                           </div> 
+                                           <div className ='inforItem'>
+                                               <div className='title'>Vị trí hiện tại:</div>
+                                               <div className='value'>
+                                                 <div className='value'>
+                                                       <div className="value">{deviceAddresses[item.id] ?? "Đang tải..."}</div>
+                                                 </div>   
+                                               </div>
+                                           </div> 
+
+
+
+
+                                         </div>                                                                                                
+                                           {/* <div className='button'>
+                                             <button type="button" class="btn btn-primary" data-mdb-ripple-init
+                                                    onClick={()=>handleshowModalChangeName(item)}
+                                             >Đổi tên</button>   
+                                           </div>                                   */}
+                                       </div>                                                                             
+                                   </Popup>  
+                                     
+                               </Marker> 
+                                
+                               )) : ''}
 
                                 
                                   

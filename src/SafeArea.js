@@ -6,7 +6,7 @@ import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css'; 
 import axios from 'axios';
 import './SafeArea.scss'
-import { MapContainer, TileLayer,Marker, Popup,useMapEvent,useMap   } from "react-leaflet";
+import { MapContainer, TileLayer,Marker, Popup,useMapEvent,useMap, FeatureGroup , Circle    } from "react-leaflet";
 import L from 'leaflet'
 import { useMapContext } from './usercontext';
 import { ToastContainer } from 'react-toastify';
@@ -15,42 +15,33 @@ import { UserContext } from './usercontext';
 import { GiPositionMarker } from "react-icons/gi"; 
 import { IoMdSettings } from "react-icons/io";
 import { RiChatHistoryFill } from "react-icons/ri";
-import {Link, useNavigate} from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";  
 import { useParams } from "react-router-dom";
-import { url } from './services/UserService';
+import { url } from './services/UserService';  
 import { EditControl } from "react-leaflet-draw";   
+import "leaflet/dist/leaflet.css";
+import "leaflet-draw/dist/leaflet.draw.css";
 
-function SafeArea() {          
+
+function SafeArea() {              
    
-    const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext);
-    // const url = 'https://sawacoapi.azurewebsites.net' 
+    const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext); 
+
     const PositionSafe = new L.Icon({ // vị trí GPS khi bị trộm đi qua
         iconUrl: require("./asset/images/maker_user.png" ),
         iconSize: [50,50],
-        iconAnchor: [28, 50],// nhỏ thì sang phải, xuống     
+        iconAnchor: [25, 40],// nhỏ thì sang phải, xuống     
         popupAnchor: [3, -40], 
-    })   
-    
-    const [valueBattery, setValueBattery] = useState(50); // Giá trị mặc định là 50
-    const [valueFrom, onChangeFrom] = useState(new Date());
-    const [valueTo, onChangeTo] = useState(new Date());
-    const [selectedOption, setSelectedOption] = useState('');
-    const [selectedLogger, setSelecteLogger] = useState({});
-
-    const [Object, setObject] = useState({id:'', latitude: 0 , longitude: 0 });
+    })      
+    const [isDisplayCircle, setisDisplayCircle] = useState(false); // Thêm trạng thái loading
+    const [loading, setLoading] = useState(false); // Thêm trạng thái loading
+    const [Object, setObject] = useState({id:'', latitude: 0 , longitude: 0 , safeRadius: 0 });
     const [ObjectClick, setObjectClick] = useState({ latitude: 0 , longitude: 0 });
-    
-    const [IDObject, setIDObject] = useState('');  
-
-    const [listPositionWantToDisplay, setListPositionWantToDisplay] = useState([]);
-    const [ZOOM_LEVEL, setZOOM_LEVEL] = useState(9)
+    const [ZOOM_LEVEL, setZOOM_LEVEL] = useState(17)
     const [center, setCenter] = useState({lat: 10.780064402624358,lng: 106.64558796192786 }) // center
-    const [begin, setBegin ] = useState({}) 
-    const [end, setEnd ] = useState({})   
-    const [action, setAction] = useState('')
-    const mapRef = useRef() 
-    const [displayRoutes, setDisplayRoutes] = useState(false)
-    const [isConvertDateTimeInPopup, setisConvertDateTimeInPopup] = useState(false)
+    const mapRef = useRef()
+    const {id} = useParams(); // Lấy tham số động từ URL
+    
     
     const getObjectById = async () => {
       let success = false;
@@ -73,334 +64,121 @@ function SafeArea() {
         }
       }
     };
-    const {id} = useParams(); // Lấy tham số động từ URL
+
+
+    const callAPIUpdateObjectById = async () => {
+      let success = false;
+      while (!success) {   
+        try {
+          const response = await axios.patch(`${url}/GPSObject/UpdateObjectInformation?ObjectId=${id}`, 
+
+            {
+              "Longitude": ObjectClick.longitude,
+              "Latitude": ObjectClick.latitude,
+              "SafeRadius": radius,
+              "CurrentTime": "0001-01-01T00:00:00",
+              "AlarmTime": "0001-01-01T00:00:00",
+              "BlueTooth": "OFF",
+              "Emergency": true,
+              "PhoneNumber": "0888927971"
+            }
+          );  
+          const ObjectData = response.data;
+          // Kiểm tra nếu dữ liệu nhận được hợp lệ
+          if (ObjectData) {      
+            // const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
+            setLoading(false)
+            setisDisplayCircle(false)
+            toast.success('Xác lập vùng an toàn thành công')   
+
+            success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
+          } else {  
+            toast.error('Xác lập không thành công')      
+          }
+        } catch (error) {
+          console.error('Get All Logger error, retrying...', error);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+        }
+      }
+    };
 
     useEffect(() => { 
-       
         getObjectById()
-        setPercentBattery(0)
-        setMakerOpenPopup({})
     }, [])
+
+    useEffect(() => { 
+      if(Object.id !== '' && Object.safeRadius > 0){  
+          setObjectClick({ latitude: Object.latitude , longitude: Object.longitude })
+          setRadius(Object.safeRadius)  
+          setCenter({lat: Object.latitude ,lng: Object.longitude })  
+          setisDisplayCircle(true)
+      } 
+    }, [Object])
+
+ 
 
     
 
     useEffect(() => { // Cập nhật bản đồ với giá trị mới của center và ZOOM_LEVEL
         if (mapRef.current) {
-              mapRef.current.setView(center, ZOOM_LEVEL);
+              mapRef.current.setView(center, ZOOM_LEVEL);  
         }
       }, [center]);
 
-    const currentRoutingRef = useRef(null);
-    
-    const handleDisplayRoute = (list) => {  // hiển thị đường đi của GPS Tracker
-          const lineStolen = list.map((item) => L.latLng(item.latitude, item.longtitude));
-  
-          currentRoutingRef.current = L.Routing.control({
-          waypoints: [
-          // L.latLng(ListPositionSafety[0].lat, ListPositionSafety[0].lng),        
-              ...lineStolen
-          ],
-          lineOptions: {
-            styles: [
-              {
-                color: "blue",
-                opacity: 1,
-                weight: 8
-              }
-            ]
-          },  
-          routeWhileDragging: true,   
-          addWaypoints: false, 
-          draggableWaypoints: false,
-          fitSelectedRoutes: false,
-          showAlternatives: false,
-          show: false,
-          createMarker: function() { return null; }        
-          });
-          currentRoutingRef.current.addTo(mapRef.current);
-    }
-
-    const RemoveRoute = () => {   // remove đường đi GPS Tracker
-      if (currentRoutingRef.current) {
-          currentRoutingRef.current.remove();
-          currentRoutingRef.current = null;
-      }
-    };
-
-    const calculateDistance = (point1, point2) => {
-      const latLng1 = L.latLng(point1.latitude, point1.longtitude);
-      const latLng2 = L.latLng(point2.latitude, point2.longtitude);
-      const distance = latLng1.distanceTo(latLng2);     
-      return distance;
-    };
-
-    // const handleChange = (event) => { // Chọn Logger để xem lịch sử
-    //     const SafeAreaStolen = listLoggerStolenSafeArea.find((item,index) => item.id === event.target.value )
-    //     setSelecteLogger(SafeAreaStolen)
-    //     setSelectedOption(event.target.value);
-    // };
-
-    // useEffect(() => {
-    //      if(action === 'Delete'){
-    //           const SafeAreaStolen = listLoggerStolenSafeArea.find((item,index) => item.id === selectedLogger.id )
-    //           setSelecteLogger(SafeAreaStolen)
-    //      }
-    //      if(action === 'See'){
-
-    //      }
-    // },[action,listLoggerStolenSafeArea])
-
-    useEffect(() => {
-         if(action === 'Delete'){
-          setListPositionWantToDisplay([]);
-          setDisplayRoutes(false);          
-         }
-         if(action === 'See'){
-
-         }
-    },[selectedLogger])
-
-
-
-    function changeDateToFixed(timestamp) {
-      const parts = timestamp.split('T');
-      const part2 = parts[0].split('-');
-      const newTimestamp = `${part2[0]}-${part2[2]}-${part2[1]}T${parts[1]}`;
-      return newTimestamp;
-    }
-  
-    function findMinMaxTimestamps(filteredLines) {
-      let minObj = filteredLines[0];
-      let maxObj = filteredLines[0];
-      filteredLines.forEach(item => {
-
-        const currentTimestamp = new Date(item.timestamp);
-
-        if (currentTimestamp < new Date(minObj.timestamp)) {
-          minObj = item;
-        }
-    
-        if (currentTimestamp > new Date(maxObj.timestamp)) {
-          maxObj = item;
-        }
-      });
-    
-      return { min: minObj, max: maxObj };
-    }
-   
-
-
-    const handleShowRoute = () => { 
-        if(selectedOption === ''){
-                    toast.error('Bạn chưa chọn trạm cần xem')
-        }
-        else{
-            const startOfDay = new Date(valueFrom);                      
-            const endOfDay = new Date(valueTo);
-
-            if(startOfDay < endOfDay){
-              if( endOfDay < new Date('2024-10-02T23:59:59') || startOfDay > new Date('2024-10-14T13:30:00')    ){  // giữ nguyên không convert khi lọc nhưng convert ở popup
-                
-                setisConvertDateTimeInPopup(true)
-
-                const filteredLines = selectedLogger.stolenLines.filter(line => {                                     
-                      const timestamp = new Date(line.timestamp);
-                      return timestamp >= startOfDay && timestamp <= endOfDay;
-                });
-
-                if(filteredLines.length === 0){
-                  toast.error('Không có dữ liệu')
-                  setListPositionWantToDisplay([])
-                  setDisplayRoutes(false);    
-                }  
-                else{
-                    setBegin(findMinMaxTimestamps(filteredLines).min)
-                    setEnd(findMinMaxTimestamps(filteredLines).max)
-                    const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-                    setListPositionWantToDisplay(newArr);
-                    setDisplayRoutes(true); 
-                    setCenter({lat: 10.736910478129415 , lng: 106.66432499334259 })
-                    setZOOM_LEVEL(9)
-                }
-              }    
-
-              else{  // convert khi lọc nhưng không convert ở popup
-                
-                setisConvertDateTimeInPopup(false)
-                
-                const LineAfterConvert = selectedLogger.stolenLines.map(item => {                                     
-                      const newItem = convertDateTimeToFilter(item);
-                      return newItem
-                });
-
-                const filteredLines = LineAfterConvert.filter(line => {                                     
-                      const   timestamp = new Date(line.timestamp);
-                      return  timestamp >= startOfDay && timestamp <= endOfDay;
-                });
-
-                if(filteredLines.length === 0){
-                  toast.error('Không có dữ liệu')
-                  setListPositionWantToDisplay([]);
-                  setDisplayRoutes(false); 
-                }  
-                else{
-                    setBegin(findMinMaxTimestamps(filteredLines).min)
-                    setEnd(findMinMaxTimestamps(filteredLines).max)
-                    const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-                    setListPositionWantToDisplay(newArr);
-                    setDisplayRoutes(true); 
-                    setCenter({lat:10.80896076479404 , lng: 106.68593859151143 })
-                    setZOOM_LEVEL(9)
-                }
-              }
-            }
-            else{
-              toast.error('Thời gian không hợp lệ')
-            }                    
-        }
-    }
-
-      const handleShowRouteAfterDelete = () => { 
-      if(selectedOption === ''){
-        toast.error('Bạn chưa chọn trạm cần xem')
-      }
-      else{
-          const startOfDay = new Date(valueFrom);         
-          const endOfDay = new Date(valueTo);
-          const filteredLines = selectedLogger.stolenLines.filter(line => {
-                  const timestampformat = changeDateToFixed(line.timestamp) 
-                  const timestamp = new Date(timestampformat);
-                  return timestamp >= startOfDay && timestamp <= endOfDay;
-          });
-
-          if(filteredLines.length === 0){
-              window.alert('Không có dữ liệu handleShowRouteAfterDelete')
-          }  
-          else{
-              setBegin( filteredLines[0] )
-              setEnd(filteredLines[filteredLines.length-1] )
-              const newArr = filteredLines.slice(1, -1);
-              setListPositionWantToDisplay(newArr);
-              setDisplayRoutes(true); 
-              setCenter({lat:filteredLines[0].latitude , lng: filteredLines[0].longtitude })
-              setZOOM_LEVEL(18)
-          }   
-      }
-  }
+  const [circle, setCircle] = useState(null);
+  const [radius, setRadius] = useState(10); // Khởi tạo bán kính hình tròn (500m)
+  // const [latLng, setLatLng] = useState(null); // Vị trí click trên bản đồ
 
     const handleMapClickGetLocation = (e) => {  // lấy tọa độ khi Click vô Map
 
       setObjectClick({  latitude: e.latlng.lat , longitude: e.latlng.lng  })
 
+
+      const { lat, lng } = e.latlng;
+      // setLatLng({ lat, lng });
+      // setCenter({ lat, lng });
+  
+      // Xóa hình tròn nếu có
+      if (circle) {
+        circle.remove();
+      }
+  
+      // Tạo hình tròn mới với bán kính hiện tại
+      const newCircle = L.circle([lat, lng], { radius });
+      newCircle.addTo(e.target);
+      setCircle(newCircle);
+
+
       console.log('lat: '+ e.latlng.lat)
       console.log('lng: '+ e.latlng.lng)
     };
 
-    // const executeFunctions = async () => {
-    //   await  getLogger();       // Cập nhật lại danh sách Logger
-    //   setAction('Delete')      // Sau đó thực hiện hàm tiếp theo
-    // };  
+    const handleRadiusChange = (e) => {
+      const newRadius = e.target.value;
+      setRadius(newRadius);
+  
+      // Cập nhật bán kính của hình tròn
+      if (circle) {
+        circle.setRadius(newRadius);
+      }
+    };
 
-    const handleDeleteRoutes = async () => {
-    if (selectedOption === '') {
-      toast.error('Bạn chưa chọn trạm cần xóa')
-    } else {
-      
-        // Hiển thị cửa sổ xác nhận
-        const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa các dữ liệu này không?');
+    const handleSetRadius = ( ) => {
+      setLoading(true); // Bắt đầu trạng thái tải
+      callAPIUpdateObjectById()
 
-        if (confirmDelete) {
-
-            const startOfDay = new Date(valueFrom);
-            const endOfDay = new Date(valueTo);
-            if(startOfDay < endOfDay){
-
-                const filteredLines = selectedLogger.stolenLines.filter(line => {
-                const timestamp = new Date(line.timestamp);
-                return timestamp >= startOfDay && timestamp <= endOfDay;
-                }); 
-
-                if(filteredLines.length > 0){
-                  const startDate = formatDateTime(valueFrom);
-                  const endDate = formatDateTime(valueTo);
-                  const loggerId = selectedLogger.id;                             
-                  try {
-                      // Gọi API để xóa các phần tử trong stolenLine theo ngày
-                      const response = await axios.delete(`${url}/StolenLine/DeleteStolenLineByDate/LoggerId=${loggerId}?startDate=${startDate}&endDate=${endDate}`);
-                      
-                      if (response.status === 200) {
-                         
-                          toast.success('Xóa thành công!');                                           
-                          // executeFunctions();
-                         
-                          
-                          
-                      } else {
-                          toast.error('Có lỗi xảy ra khi xóa!');
-                      }
-                  } catch (error) {
-                      console.error('Lỗi khi gọi API xóa:', error);
-                      toast.error('Có lỗi xảy ra khi xóa!');
-                  }
-    
-                }
-                else{
-                      toast.error('Không có dữ liệu');
-                }
-            }
-            else{
-              toast.error('Thời gian không hợp lệ')
-            }
-      
-           
-
-           
-        } else {
-     
-        }
     }
-    }
-
-    function convertDateTimeBefore(inputString) {
-      const [date, time] = inputString.split('T');    
-      const [year, month, day] = date.split('-');
-      return `${day}-${month}-${year} ${time}`;
-    }
-    
-    function convertDateTimeAfter(inputString) {
-      const [date, time] = inputString.split(' ');    
-      const [year, month, day] = date.split('-');
-      return `${day}-${month}-${year} ${time}`;
-    }
-
-    function convertDateTimeToFilter(ObjectItem) {
-      const [date, time] = ObjectItem.timestamp.split('T');    
-      const [year, day, month] = date.split('-');    
-      return {...ObjectItem, timestamp : `${year}-${month}-${day} ${time}` };
-    }
-   
-
-  const formatDateTime = (date) => {
-    if (!date) return "No date selected";
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-  };
-
-  const handleChangeBattery = (event) => {
-    setValueBattery(event.target.value); // Cập nhật giá trị khi trượt
-  }; 
-
 
   console.log('idObject', id)  
   console.log(Object)
   
   return (   
-    <div className='SafeArea'> 
+    <div className='SafeArea'>
+                    {loading && (
+                      <div className="loading-overlay">
+                        <div className="loading-spinner"></div>
+                      </div>
+                    )} 
       <div className='wrapSafeArea'>
                 <div className='TitleSafeArea'>   
                     <div className='TitleSafeAreaItem'>
@@ -417,95 +195,65 @@ function SafeArea() {
                              attribution ='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"                           
                         />
-                        <MyClickHandlerGetLocation onClick={handleMapClickGetLocation}/>                                                           
-                                {/* {displayRoutes &&  listPositionWantToDisplay.map((item,index)=>(
-                                  <Marker 
-                                      className='maker'
-                                      position={[item.latitude , item.longtitude]}
-                                      icon= { positionWarning } 
-                                      key={ index }                               
-                                  >
-                                    <Popup>
-                                        <div className='div-popup'>  
-                                            <div>{ isConvertDateTimeInPopup ? convertDateTimeBefore(item.timestamp) : convertDateTimeAfter(item.timestamp)}</div>                                                                    
-                                        </div>                                                                             
-                                    </Popup>    
-                                  </Marker>
-                                ))}  */}
+                        <MyClickHandlerGetLocation onClick={handleMapClickGetLocation}/>
+
+                        {isDisplayCircle &&                         
+                        <Circle
+                          center={ {lat: Object.latitude,lng: Object.longitude } }  
+                          radius={Object.safeRadius}
+                          pathOptions={{ color: "red", fillColor: "pink", fillOpacity: 0.5 }}
+                        />}
+
+
+                        {ObjectClick.latitude > 0 && (
+                            <Marker 
+                                    position={[ObjectClick.latitude , ObjectClick.longitude]}
+                                    icon= { PositionSafe } 
+                                    zIndexOffset={ 1000 }   
+                            >
+                              {/* <Popup>
+                                Tọa độ: {latLng.lat.toFixed(4)}, {latLng.lng.toFixed(4)}
+                              </Popup> */}
+                            </Marker>
+                        )}
+                             
+                        {/* <FeatureGroup>
+                          <EditControl
+                            position="topright"
+                            onCreated={_created}
+                            draw={
+                              {
                                 
-                               {ObjectClick.latitude > 0 &&  
-
-                                <Marker 
-                                      className='maker'
-                                      position={[ObjectClick.latitude, ObjectClick.longitude]}   
-                                      icon= { PositionSafe }     
-                                      zIndexOffset={ 1000 } 
-                                                                  
-                                  >
-                                    <Popup>   
-                                        <div className='div-popup'>
-                                        {/* <div>{ isConvertDateTimeInPopup ? convertDateTimeBefore(begin.timestamp) : convertDateTimeAfter(begin.timestamp)}</div>*/}                        
-                                        </div>                                                                             
-                                    </Popup>    
-                                </Marker> }
-                                 
-                               
-                                {/* {displayRoutes && 
-                                  <Marker 
-                                      className='maker'    
-                                      position={[end.latitude , end.longtitude]}
-                                      icon= { endMarker }
-                                      zIndexOffset={  1000 } 
-                                                                  
-                                  >
-                                    <Popup>
-                                        <div className='div-popup'>
-                                            <div>{ isConvertDateTimeInPopup ? convertDateTimeBefore(end.timestamp) : convertDateTimeAfter(end.timestamp)}</div>                                                                    
-                                        </div>                                                                             
-                                    </Popup>    
-                                </Marker>
-                                }  */}
-
-
+                              }
+                            }
+                          />
+                        </FeatureGroup> */}                                                                                                                
                   </MapContainer>
       </div>
       <div className='filter'>        
                    
                      <div className='filterItem'>
-                                <div className='wrapBattery'>
-                                    <div className='wrapBatteryItem'>
-                                      <input
-                                          type="range"
-                                          min="0"
-                                          max="100"
-                                          value={valueBattery}
-                                          onChange={handleChangeBattery}
-                                      />
-                                      <div>{`< ${valueBattery}%`}</div>  
-                                    </div>
+                            
+                                <input
+                                      type="range"
+                                      id="radiusSlider"
+                                      min="0"
+                                      max="500"
+                                      step="1"
+                                      value={radius}
+                                      onChange={handleRadiusChange}
+                                />
+                                    <span>{radius} m</span>
+
+
                                     <div className='wrapBatteryItem' >
                                       <button 
                                           type="button" 
                                           class="btn btn-danger"
+                                          onClick={handleSetRadius}
                                         
-                                      >Chọn</button>
-                                    </div>                                   
-                                </div>
-
-                                <div className='filterItemdiv'>
-                                   <Link to={`/Objects/Setting/${id}`}>        
-                                    <div className = 'itemObjectSecondItem'>
-                                      <div>
-                                          <IoMdSettings className='itemObjectSecondItemIcon'/>
-                                      </div>
-                                      <div>  
-                                          Thiết lập thiết bị  
-                                      </div>
-                                    </div>
-                                  </Link>  
-                                </div>   
-                         
-                                                            
+                                      >Xác nhận</button>
+                                    </div>                                                                                                                                                     
                      </div>
 
                   </div>

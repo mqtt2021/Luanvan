@@ -5,8 +5,6 @@ export const UserContext =createContext({ email: '', auth: false });
     
 const UserProvider = ({ children }) => {
 
-
-
   const [center, setCenter] = useState({ lat: 10.81993366729437,lng: 106.69843395240606  });
   const [zoomLevel, setZoomLevel] = useState(18);
   const [percentBattery, setPercentBattery] = useState(0);   
@@ -19,6 +17,11 @@ const UserProvider = ({ children }) => {
   const [displayNav, setDisplayNav] = useState(false); 
   const [displayRoutesTwoPoint, setDisplayRoutesTwoPoint] = useState(false); 
   const [isButtonDisabled, setIsButtonDisabled] = useState(false);
+
+    const [listAllDevices,setlistAllDevices] = useState([]) ;     
+    const [inforCustomer, setInforCustomer] = useState({})   ;
+    const [phoneNumberCustomer, setPhoneNumberCustomer] = useState('')   ;
+    const [listObject, setlistObject] = useState([]) ;
 
 
 
@@ -62,9 +65,6 @@ const UserProvider = ({ children }) => {
       email: '',
       auth: false,
     }));
-
-  
-
   };
 
   const handelRepair=()=>{
@@ -82,7 +82,9 @@ const UserProvider = ({ children }) => {
     getPositionUser, setGetPositionUser,makerOpenPopup, setMakerOpenPopup,pressPositionWarning, setPressPositionWarning,
     pressPercentBattery, setPressPercentBattery,changeNameFromMapToHeader, setChangeNameFromMapToHeader,getLoggerStolen, setgetLoggerStolen,
     displayNav, setDisplayNav, displayRoutesTwoPoint, setDisplayRoutesTwoPoint,isButtonDisabled, setIsButtonDisabled,
-    accessRouteRegister, setaccessRouteRegister, idObjectConnect, setidObjectConnect
+    accessRouteRegister, setaccessRouteRegister, idObjectConnect, setidObjectConnect, listAllDevices,setlistAllDevices,
+    inforCustomer, setInforCustomer, phoneNumberCustomer, setPhoneNumberCustomer, listObject, setlistObject 
+
      }}>
       {children}    
     </UserContext.Provider>

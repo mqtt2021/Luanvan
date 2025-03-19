@@ -7,7 +7,7 @@ import L from 'leaflet'
 import imgObject from './asset/images/ImgObject.jpg'  
 import { MdDriveFileRenameOutline } from "react-icons/md";
 import { TbDimensions } from "react-icons/tb";
-import { LuNotebookText } from "react-icons/lu";
+// import { LuNotebookText } from "react-icons/lu";
 import { GiPositionMarker } from "react-icons/gi";
 import { PiMapPinSimpleAreaBold } from "react-icons/pi";
 import { FaFile } from "react-icons/fa";
@@ -186,7 +186,7 @@ function EditInforObject() {
                         <div className='wrapInforEditObjectItem'>
                           <div className='wrapInforEditObjectItemFirst'>
                               <div className='divIconEditObject'>
-                                  <LuNotebookText className='IconEditObject'/>
+                                  {/* <LuNotebookText className='IconEditObject'/> */}
                               </div>  
                               <div className='titleEditObject'>Mô tả:</div>
                           </div> 

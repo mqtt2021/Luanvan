@@ -29,7 +29,8 @@ function PositionObject() {
         popupAnchor: [3, -40], 
     })   
     
-      
+    const [Device, setDevice] = useState({id:'', latitude: 0 , longitude: 0 });
+
     const [valueFrom, onChangeFrom] = useState(new Date());
     const [valueTo, onChangeTo] = useState(new Date());
     const [selectedOption, setSelectedOption] = useState('');
@@ -69,6 +70,30 @@ function PositionObject() {
         }
       }
     };
+
+
+    const getDeviceById = async () => {
+      let success = false;  
+      while (!success) {   
+        try {
+          const response = await axios.get(`${url}/GPSDevice/GetGPSDeviceById?Id=${Object.gpsDeviceId}`);
+          const DeviceData = response.data;
+    
+          // Kiểm tra nếu dữ liệu nhận được hợp lệ
+          if (DeviceData) {    
+            // const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
+            setDevice(DeviceData);     
+            success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
+          } else {
+            alert('ReLoad');
+          }
+        } catch (error) {
+          console.error('Get All Logger error, retrying...', error);
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+        }
+      }
+    };
+
     const {id} = useParams(); // Lấy tham số động từ URL
 
     useEffect(() => { 
@@ -77,6 +102,21 @@ function PositionObject() {
         setPercentBattery(0)
         setMakerOpenPopup({})
     }, [])
+
+
+    useEffect(() => { 
+      if(Object.id !== ''){
+            getDeviceById();
+      }   
+       
+    }, [Object])  
+
+    useEffect(() => { 
+      if(Device.id !== ''){
+             getAddressFromCoordinates(Device.latitude,  Device.longitude );   
+      }
+       
+    }, [Device])  
 
     
 
@@ -384,6 +424,25 @@ function PositionObject() {
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   };
 
+
+    const [address, setAddress] = useState("");
+
+  
+    const getAddressFromCoordinates = async (lat, lon) => {
+      try {   
+        const response = await axios.get(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+        );
+        const data = response.data;
+        setAddress(data.display_name || "Không tìm thấy địa chỉ");
+      } catch (error) {
+        console.error("Lỗi khi gọi API:", error);
+        setAddress("Đang xác định vị trí");      
+      }    
+    };
+
+
+
   console.log('idObject', id)  
   console.log(Object)
   return (   
@@ -391,7 +450,7 @@ function PositionObject() {
       <div className='wrapPositionObject'>
                 <div className='SettingTitle'>   
                     <div className='SettingTitleItem'>
-                          Vị trí {Object.name}   
+                          {Object.connected ? `Vị trí ${Object.name}` : `Lộ trình ${Object.name}`}  
                     </div> 
                 </div>
             
@@ -400,6 +459,27 @@ function PositionObject() {
                           center={center} 
                           zoom={ZOOM_LEVEL}     
                           ref={mapRef}>
+
+
+
+
+                         {/* Div hiển thị trên bản đồ */}
+                         <div style={{
+                            position: "absolute",
+                            top: "10px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            background: "rgba(255, 255, 255, 0.9)",
+                            padding: "10px 20px",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 5px rgba(0, 0, 0, 0.3)",
+                            zIndex: 1000,
+                            fontWeight: "bold"
+                          }}>
+                            {address}
+                          </div>
+
+
                         <TileLayer
                              attribution ='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -424,7 +504,7 @@ function PositionObject() {
                                
                                   <Marker 
                                       className='maker'
-                                      position={[Object.latitude, Object.longitude]}   
+                                      position={[Device.latitude, Device.longitude]}      
                                       icon= { positionObject }     
                                       zIndexOffset={ 1000 } 
                                                                   
@@ -458,11 +538,10 @@ function PositionObject() {
                     </MapContainer>
       </div>
       <div className='filter'>        
-                   
                      <div className='filterItem'>
                                 <div className='filterItemdiv'>
-                                   <Link to="/HistoryObject">
-                                  <div className = 'itemObjectSecondItem'>
+                                  <Link to={`/HistoryObject/$`}>
+                                    <div className = 'itemObjectSecondItem'>
                                       <div>
                                           <RiChatHistoryFill className='itemObjectSecondItemIcon'/>
                                       </div>
@@ -470,14 +549,12 @@ function PositionObject() {
                                           Lộ trình di chuyển    
                                       </div>
                                     </div>
-                                    </Link>
+                                  </Link>
                                 </div>
 
                                 <div className='filterItemdiv'>   
-                                
-                                <Link to={`/SafeArea/${id}`}>        
-                                  
-                                  <div className = 'itemObjectSecondItem'>
+                                  <Link to={`/SafeArea/${id}`}>        
+                                    <div className = 'itemObjectSecondItem'>
                                       <div>
                                           <RiChatHistoryFill className='itemObjectSecondItemIcon'/>
                                       </div>
@@ -485,7 +562,7 @@ function PositionObject() {
                                           Vùng an toàn  
                                       </div>
                                     </div>
-                                    </Link>
+                                  </Link>
                                 </div>
 
                                 <div className='filterItemdiv'>
