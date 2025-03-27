@@ -53,8 +53,6 @@ function Object() {
   //           const phoneNumber = sessionStorage.getItem('phoneNumer');
   //           const response = await axios.get(`${url}/GPSObject/GetObjectByPhoneNumber?phoneNumber=${phoneNumber}`);  
   //           let objectList = response.data; 
-
-
   //           if (objectList && objectList.length > 0) {
   //               // Quét qua từng đối tượng để lấy thông tin GPS
   //               const updatedObjects = await Promise.all(
@@ -75,7 +73,6 @@ function Object() {
   //                       }
   //                   })
   //               );
-
   //               setlistAllObjects(updatedObjects);      
   //               success = true;   
   //           } 
@@ -84,7 +81,6 @@ function Object() {
   //           await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 1 giây trước khi thử lại
   //       }
   //   }
-
   //   setIsLoading(false); // Kết thúc loading sau khi lấy dữ liệu xong
   // };
 
@@ -120,8 +116,10 @@ function Object() {
                 );
 
                 setlistAllObjects(updatedObjects);
-                success = true;
+                
             } 
+
+            success = true;
         } catch (error) {
             console.error('getAllObjectsByPhoneNumber error, retrying...', error);    
             await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 1 giây trước khi thử lại
@@ -214,16 +212,16 @@ function Object() {
               
               (listAllObjects.map((item , index)=> (                    
                 <div className='wrapperContainerObject'>        
-                <div className='containerDevice'>
-                  <div className='itemDevice itemDeviceFirst'>
-                      <div className='divIconDevice'>
-                          <TbDeviceComputerCamera className='iconDevice'/>
+                <div className='containerObject'>
+                  <div className='itemObject itemObjectFirst'>
+                      <div className='divIconObject'>
+                          <TbDeviceComputerCamera className='iconObject'/>
                       </div>
-                      <div className='divIconNameAndPin'>
-                         <div className='name'>
+                      <div className='divIconNameAndPinObject'>
+                         <div className='nameObject'>
                             {item.name}
                          </div>
-                         <div className='status'>
+                         <div className='statusObject'>
                           {item.stolen && (
                               <span className="warning-text">
                                   <IoIosWarning className="warning-icon" /> Cảnh báo kẻ trộm
@@ -233,13 +231,14 @@ function Object() {
 
                       </div>
                       <div  
-                            className={item.connected ? 'connected' : 'disconnected'}
+                            className={item.connected ? 'connectedObject' : 'disconnectedObject'}
                            
                       >
                               {item.connected ? 'Đã kết nối' : 'Chưa kết nối'}
                       </div>
                   </div>
-                  <div className='itemDevice itemObjectecond'>
+
+                  <div className='itemObject itemObjectecond'>
 
                   {item.connected ?  
                     <Link to={`/PositionObject/${item.id}`}>     
@@ -247,22 +246,22 @@ function Object() {
                         <div>
                           <GiPositionMarker className='itemObjectecondItemIcon'/>  
                         </div>
-                        <div>
+                        <div className="itemObjectecondItemText" >
                             Vị trí
                         </div>
                       </div>
-
+   
                       </Link> :
 
-                      <Link to={`/PositionObject/${item.id}`}>     
-                      <div className = 'itemObjectecondItem'>  
-                        <div>
-                          <RiChatHistoryFill className='itemObjectecondItemIcon'/>  
+                      <Link to={`/HistoryObject/${item.id}`}>     
+                        <div className = 'itemObjectecondItem'>  
+                          <div>
+                            <RiChatHistoryFill className='itemObjectecondItemIcon'/>  
+                          </div>
+                          <div className="itemObjectecondItemText">
+                              Lộ trình
+                          </div>
                         </div>
-                        <div>
-                            Lộ trình
-                        </div>
-                      </div>
                       </Link> 
                   }
                       {/* <Link to={`/PositionObject/${item.id}`}>     
@@ -283,20 +282,20 @@ function Object() {
                               
                         >
                           <div>
-                          <GrConnect className='itemObjectecondItemIcon'   />
+                          <GrConnect className='itemObjectecondItemIconConnect'   />
                           </div>
-                          <div>
+                          <div className="itemObjectecondItemTextConnect">
                             Kết nối
                           </div>
                         </div>
                        
                       
-                      <Link to="/Object/Setting/:id">         
+                      <Link to={`/Object/Setting/${item.id}`}>            
                         <div className = 'itemObjectecondItem'>
                           <div>
                             <IoIosInformationCircle className='itemObjectecondItemIcon'/>
                           </div>
-                          <div>
+                          <div className="itemObjectecondItemText">
                             Thông tin   
                           </div>
                         </div>

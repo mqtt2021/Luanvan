@@ -26,10 +26,11 @@ import { IoNotifications } from "react-icons/io5";
 import { url } from './services/UserService';
 
 function Header() {
-
+  const { unreadCount, setUnreadCount  } =  useContext(UserContext); 
   const [listNotifications, setListNotifications] = useState([]);
   const [phone, setPhone] = useState('');
-  const [unreadCount, setUnreadCount] = useState(0);
+  const [listAllDeices, setListAllDeices] = useState([]); 
+  const [Device, setDevice] = useState({id:'', latitude: 0 , longitude: 0 });
 
   const location = useLocation();
   const [valueBattery, setValueBattery] = useState(50); // Giá trị mặc định là 50
@@ -169,7 +170,9 @@ function Header() {
   },[listLoggerStolen])
 
 
-  const handleLogout = ()=>{ 
+  const handleLogout = () => {                    
+
+    setDisplayNav(false)
     
     sessionStorage.removeItem('idDevice')
     sessionStorage.removeItem('phoneNumer')  
@@ -198,11 +201,24 @@ function Header() {
 
                   const sortedData = NotificationsData.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+
+                  const uniqueNotifications = sortedData.reduce((acc, item) => {  
+                    const exists = acc.find((t) => t.title === item.title && t.timestamp === item.timestamp);
+                    if (!exists) {
+                      acc.push(item); // Chỉ thêm vào danh sách nếu chưa có
+                    }
+                    return acc;
+                  }, []);
+
+
+
                   // Đếm số lượng thông báo chưa đọc
-                  const unreadCount = NotificationsData.filter((item) => !item.isAcknowledge).length;
-                  setUnreadCount(unreadCount)
-                  setListNotifications(sortedData);    
-                  console.log(sortedData);   
+                  const unreadCount = uniqueNotifications.filter((item) => item.isAcknowledge === false).length;
+                  //console.log('unreadCount',NotificationsData.filter((item) => item.isAcknowledge === false));  
+                  setUnreadCount(unreadCount)                     
+                  setListNotifications(uniqueNotifications); 
+
+                  //console.log(uniqueNotifications);   
                 
                   success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
                 } else {
@@ -215,35 +231,112 @@ function Header() {
             }
       };
 
-      useEffect(() => {  
-        const phoneNumer = sessionStorage.getItem('phoneNumer');    
-        setPhone(phoneNumer)    
-      }, [])
+
+
+        const getAllDevices = async () => {   
+          let success = false;
+          while (!success) {
+            try {
+              const response = await axios.get(`${url}/GPSDevice/GetAllGPSDevices`);  
+              const LoggerData = response.data;
+            
+              // Kiểm tra nếu dữ liệu nhận được hợp lệ
+              if (LoggerData && LoggerData.length > 0) {
+              
+                const phoneNumer = sessionStorage.getItem('phoneNumer');
+                const listDevice = LoggerData.filter((item) => item.customerPhoneNumber === phoneNumer);
+                setListAllDeices(listDevice);
+                success = true;    
+              } else {
+              
+              }
+            } catch (error) {
+              console.error('getAllDevices error, retrying...', error);  
+              await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+            }
+          }
+
+        };
+
+        useEffect(() => {  
+          const phoneNumer = sessionStorage.getItem('phoneNumer');    
+          setPhone(phoneNumer) 
+          getAllDevices()
+        }, [])
+        
+        useEffect(() => {   
+          if(phone !== ''){
+            getNotification(); 
+          }                     
+        }, [phone])
+         
+        useEffect( () => {
+          let connection = new signalR.HubConnectionBuilder()   
+              .withUrl("https://mygps.runasp.net/NotificationHub")   
+              .withAutomaticReconnect()    
+              .build();     
+          // Bắt đầu kết nối   
+          connection.start()   
+              .then(() => {  
+                  console.log("✅ Kết nối SignalR thành công!");
       
-      useEffect(() => { 
-        if(phone !== ''){
-          getNotification();
-        }                     
-      }, [phone])
+                           // Lắng nghe các sự kiện cho từng thiết bị
+                  listAllDeices.forEach(device => {
+                    connection.on(`SendNotification${device.id}`, data => {
+                      const obj = JSON.parse(data);
+                      console.log(`📡 Dữ liệu từ thiết bị ${device.id}:`, obj);
+                       // Đợi 2 giây trước khi gọi getNotification
+                      setTimeout(() => {
+                        getNotification();
+                      }, 4000);
+                    });
+                  }); 
+              })
+              .catch(err => {
+                  console.error('Kết nối thất bại: ', err);
+              });
+          // Lắng nghe sự kiện kết nối lại
+          connection.onreconnected(connectionId => {
+              console.log(`Kết nối lại thành công. Connection ID: ${connectionId}`);
+          });
+          // Lắng nghe sự kiện đang kết nối lại
+          connection.onreconnecting(error => {
+              console.warn('Kết nối đang được thử lại...', error);
+          });
+      
+          // connection.on("SendNotificationG002", data => {   
+          //       const obj = JSON.parse(data);
+          //       //console.log(obj)  
+          //       // getLogger()                 
+          // }); 
+      
+          // Cleanup khi component unmount hoặc khi listAllDeices thay đổi
+          return () => {
+            connection.stop();
+            console.log("🔴 Kết nối SignalR đã đóng!");
+          };
+      
+      
+        }, [listAllDeices] )
 
-
-  console.log('userHeader', user)
+  //console.log('userHeader', user)
   return (    
     <div className='header font-barlow'>  
 
-
+                             
                           <div className='Menu' onClick={handleDisplayNavigation}>
                                 <div><IoMenu/></div>                                
                                 {/* {listLoggerStolen.length > 0  && <div className='amountOfWarning'>{listLoggerStolen.length}</div>} */}
-                                   
+                               
+                                {unreadCount > 0 && (
+                                        <div className="notificationBadgeMenu">{unreadCount}</div>
+                                )}  
                           </div> 
 
 
-                          {/* <div className='MapTitle'>
-                                      <div className='MapTitleItem'>
-                                                Bản đồ tổng quan      
-                                      </div> 
-                          </div>  */}   
+
+
+                        
                           
                           <div className='logoHCMUT'>  
                               <img src={logo} alt="Example" />   
@@ -258,9 +351,9 @@ function Header() {
                                           <div className='NavigationItemIconText'>Bản đồ</div>
                                           {/* {listLoggerStolen.length > 0   && <div className='amountOfWarning'>{listLoggerStolen.length}</div>} */}
                                       </div>  
-                                      <div className='NavigationItemShow divAmountOfWarning'>
+                                      {/* <div className='NavigationItemShow divAmountOfWarning'>
                                           {showTableWarning ? <div><SlArrowUp/></div>:<div><SlArrowDown/></div>}
-                                      </div>    
+                                      </div>     */}
                                   </div> 
                                 
                                 </Link>   
@@ -277,7 +370,7 @@ function Header() {
                                   </div>} 
                                  
 
-                                 <Link to="/map">
+                                 {/* <Link to="/map">
                                   <div className='NavigationItem NavigationItemBattery'
                                         onClick={handleShowPercentBattery}
                                   >
@@ -286,7 +379,7 @@ function Header() {
                                           <div>Thay Pin</div>
                                       </div>                                                                                                      
                                   </div>
-                                 </Link>    
+                                 </Link>     */}
 
                                   {showPercentBattery && 
                                   <div className='wrapBattery'>
@@ -311,7 +404,7 @@ function Header() {
                                    }
                                  
 
-                                  <Link  to="/History"> 
+                                  {/* <Link  to="/History"> 
                                       <div className='NavigationItem'                                           
                                       >
                                           <div className='NavigationItemIcon'>
@@ -320,7 +413,9 @@ function Header() {
                                           </div>    
 
                                       </div> 
-                                  </Link>
+                                  </Link> */}
+
+
                                   <Link  to="/Devices"> 
                                       <div className='NavigationItem'
                                               
@@ -387,14 +482,17 @@ function Header() {
    
                                             onClick={handleShowTableWarning}
                                       >                                      
-                                          <div className='NavigationItemIcon'>
+                                          <div 
+                                                className='NavigationItemIcon'
+                                                onClick={handleCloseNavigationMobile}   
+                                          >
                                               <div><IoIosWarning/></div>
                                               <div className='NavigationItemIconText'>Bản đồ</div>
                                               {/* {listLoggerStolen.length > 0   && <div className='amountOfWarning'>{listLoggerStolen.length}</div>} */}
                                           </div>
-                                          <div className='NavigationItemShow divAmountOfWarning'>
+                                          {/* <div className='NavigationItemShow divAmountOfWarning'>
                                               {showTableWarning ? <div><SlArrowUp/></div>:<div><SlArrowDown/></div>}
-                                          </div>    
+                                          </div>     */}
                                       </div> 
                                   </Link> 
 
@@ -405,7 +503,7 @@ function Header() {
                                   >{item.name}</div>
                                   ))}
 
-                                  <Link to="/map">   
+                                  {/* <Link to="/map">   
                                   <div className='NavigationItem NavigationItemBattery'
                                         onClick={handleShowPercentBattery}
                                   >
@@ -415,7 +513,7 @@ function Header() {
                                       </div>
                                                                                                       
                                   </div>
-                                 </Link>
+                                 </Link> */}
 
                                   {showPercentBattery && 
                                       <div className='wrapBattery'>
@@ -439,10 +537,11 @@ function Header() {
                                       </div>
                                   }
 
-                                  <Link  to="/History"> 
+                                  {/* <Link  to="/History"> 
                                       <div 
-                                              className={`${currentRoute === 'History' ? 'NavigationItemActive' : 'NavigationItem' }`}
-                                              onClick={handleCloseNavigationMobile}
+                                              // className={`${currentRoute === 'History' ? 'NavigationItemActive' : 'NavigationItem' }`}
+                                              className='NavigationItem'
+                                              onClick={handleCloseNavigationMobile}   
                                       >
                                           <div className='NavigationItemIcon'>
                                               <div><FaHistory/></div>
@@ -450,10 +549,10 @@ function Header() {
                                           </div>    
 
                                       </div>    
-                                  </Link>  
+                                  </Link>   */}
                                   <Link  to="/Devices"> 
                                       <div className='NavigationItem'
-                                              
+                                               onClick={handleCloseNavigationMobile}   
                                       >
                                           <div className='NavigationItemIcon'>
                                               <div><RiGpsFill/></div>
@@ -463,8 +562,9 @@ function Header() {
                                       </div> 
                                   </Link>
                                   <Link  to="/Objects">    
-                                      <div className='NavigationItem'
-                                              
+                                      <div 
+                                              className='NavigationItem'
+                                              onClick={handleCloseNavigationMobile}   
                                       >
                                           <div className='NavigationItemIcon'>
                                               <div><TbDeviceComputerCamera/></div>
@@ -474,12 +574,18 @@ function Header() {
                                       </div> 
                                   </Link>
                                   <Link  to="/Notification">      
-                                      <div className='NavigationItem'
-                                              
+                                      <div 
+                                              className='NavigationItem'
+                                              onClick={handleCloseNavigationMobile}   
                                       >
                                           <div className='NavigationItemIcon'>
                                               <div><IoNotifications/></div>
-                                              <div>Thông báo</div>     
+                                              <div>Thông báo</div> 
+
+                                              {unreadCount > 0 && (
+                                                  <div className="notificationBadgeMobile">{unreadCount}</div>
+                                              )}  
+
                                           </div>    
 
                                       </div> 

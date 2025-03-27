@@ -19,6 +19,7 @@ import { FaCheck } from "react-icons/fa";
 
 
 function Setting() {  
+   
     const inputRef = useRef(null); // Tạo ref để tham chiếu đến input
     const navigate = useNavigate();
     const {id} = useParams(); // Lấy tham số động từ URL
@@ -33,24 +34,60 @@ function Setting() {
     const [position, setPosition] = useState({ x: 0, y: 0 });
     const isDragging = useRef(false);
     const startPosition = useRef({ x: 0, y: 0 });
-
+    const [choseImage, setchoseImage] = useState(false);
 
 
     useEffect(()=>{
       CallAPIGetDeviceById()  
     },[])
-  
+    
+    useEffect(()=>{
+      if(Device.id !== ''){
+        CallAPIUpdateImgDeviceById()
+      }
+    },[choseImage])
+
+
+    const CallAPIUpdateImgDeviceById = async () => {      
+      let success = false;  
+      while (!success) {
+        try {
+          const response = await axios.patch(`${url}/GPSDevice/UpdateGPSDeviceStatus?GPSDeviceId=${id}`, Device    );       
+          const LoggerData = response.data;
+    
+          // Kiểm tra nếu dữ liệu nhận được hợp lệ
+          if (LoggerData === 'Update successful!') {
+            toast.success('Thay đổi ảnh thiết bị thành công')
+            success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
+            
+          } else {
+            toast.error('Xóa thiết bị không thành công')
+            alert('ReLoad');
+          }
+        } catch (error) {
+          console.error('Get All Devices error, retrying...', error);  
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+        }
+      }
+
+      await CallAPIGetDeviceById()
+
+    };
+
     const handleImageUpload = (event) => {
       const file = event.target.files[0];
       if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          setImage(e.target.result);
-        };
-        reader.readAsDataURL(file);
+        const imageUrl = URL.createObjectURL(file); // Chuyển ảnh thành URL
+        setImage(imageUrl);
+
+        setDevice((prevDevice) => ({
+          ...prevDevice, // Giữ lại các thuộc tính cũ
+          imagePath: imageUrl 
+        }))  
+        setchoseImage(pre=>!pre)
       }
     };
-  
+
     const handleMouseDown = (event) => {
       isDragging.current = true;
       startPosition.current = {
@@ -152,6 +189,9 @@ function Setting() {
           await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
         }
       }
+
+      await CallAPIGetDeviceById()
+
     };
 
 
@@ -182,13 +222,13 @@ function Setting() {
      
     };
 
-    // useEffect(()=>{
-    //     if(isInputEnabled){
-    //       CallAPIUpdateDeviceById()
-    //     }
-    // },[isInputEnabled])
+    useEffect(()=>{
+        if(Device.id !== ''){
+          setImage(Device.imagePath)
+        }
+    },[Device])
 
-console.log('Device', Device)
+  console.log('Device', Device)
   return (
     <>
     <div className='fatherSetting'>
@@ -201,29 +241,21 @@ console.log('Device', Device)
                 <div className='SettingFirst'>
                   <div className="Wrapimage">
                   <div
-                      className="image-container"
-                      onMouseMove={handleMouseMove}
-                      onMouseUp={handleMouseUp}
-                      onMouseLeave={handleMouseUp}
-                    >
-                      {image && (
-                        <img
-                          src={image}
-                          alt="Uploaded"
-                          style={{
-                            transform: `translate(${position.x}px, ${position.y}px)`,
-                          }}
-                          onMouseDown={handleMouseDown}
-                        />
-                      )}
-
-                      
-                    </div>
+                       className="image-containerDevice"                  
+                  >
+                   {image ? ( 
+                              <img src={image} alt="Uploaded" className="uploaded-imageDevice" 
+                                 
+                              />
+                            ) : (
+                              <span className="placeholder-text">Chưa chọn ảnh</span>
+                            )}
+                  </div>
                     <div
-                        className='buttonUpload'
+                        className='buttonUploadDevice'
                         onClick={() => document.getElementById("fileInput").click()}
                       >
-                        <MdPhotoCamera className='IconButtonUpload'/>
+                        <MdPhotoCamera className='IconButtonUploadDevice'/>
                       </div>   
                   </div>
                     

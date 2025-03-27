@@ -25,7 +25,8 @@ function Devices() {
 
   // const [listAllDevices,setlistAllDevices] = useState([]) 
   const [showModalAddDevice, setshowModalAddDevice] = useState(false);
-  const [Device, setDevice] = useState({id:'', name: ''});
+  const [Device, setDevice] = useState({id:'', name: '', timeStamp:  "2025-01-01T00:00:00"});
+  const [searchTerm, setSearchTerm] = useState("");
   const handleshowModalAddDevice= ()=> {   
         setshowModalAddDevice(true)       
   }
@@ -84,9 +85,6 @@ function Devices() {
 
   useEffect(()=>{
     if(Device.id !==''){ 
-     
-      
-      
       CallAPIUpdateDeviceById()  
     }
   },[Device]) 
@@ -132,21 +130,32 @@ function Devices() {
 
   }, [])
 
-  
+   // Lọc danh sách thiết bị theo searchTerm
+   const filteredDevices = listAllDevices.filter((device) =>
+    device.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+  );
+
+
+  function convertDateTimeBefore(inputString) {
+    const [date, time] = inputString.split('T');    
+    const [year, month, day] = date.split('-');
+    return `${day}-${month}-${year} ${time}`;
+  }
 
   return (
     <div className='fatherDevices'>
       <div className='wrapperDevices'>
-            <div className='MapTitle'>
+              <div className='MapTitle'>
                         <div className='MapTitleItem'>
                              Thiết bị        
                         </div>   
-            </div>
+              </div>
               <div className='toolDevices'>
                   <div className='divInputFindDevices'>
                         <input 
                           type="email" class="form-control" id="exampleInputEmail1" placeholder="Tìm kiếm thiết bị"
-                                                  
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}                     
                         />              
                   </div>                     
                   <div 
@@ -161,11 +170,11 @@ function Devices() {
               isLoading ? (
                     <div className="loadingContainer">
                             <div className="spinner"></div> {/* Hiển thị hiệu ứng loading */}
-                            <p>Đang tải...</p>
+                            <p>Đang tải...</p>  
                     </div>
               ) : 
 
-              (listAllDevices.length > 0 && listAllDevices.map((item , index)=>(
+              (filteredDevices.length > 0 && filteredDevices.map((item , index)=>(
                 <div   
                   className='wrapperContainerDevices'  
               >        
@@ -180,8 +189,11 @@ function Devices() {
                           </div>
                           <div className='divIconPin'>
                             <TiBatteryCharge className='iconPin'/>
-                            <div>{`${item.battery} %`}</div>      
-                          </div>
+                            <div>
+                              {/* {`${item.battery} %`} */}           
+                              {convertDateTimeBefore(item.timeStamp) !== '01-01-2025 00:00:00' ? `${item.battery} %` : `Chưa được cập nhật lần đầu`}
+                            </div>      
+                          </div>          
                       </div>
                   </div>
                   <div className='itemDevice itemDeviceSecond'>
@@ -191,7 +203,7 @@ function Devices() {
                               <GiPositionMarker className='itemDeviceSecondItemIcon'/>  
                             </div>
                             <div>
-                              Vị trí
+                              Vị trí                                               
                             </div>
                           </div>
                       </Link>  
@@ -207,9 +219,7 @@ function Devices() {
                         </div>
                       </Link>
                       
-                      <div>
-
-                      </div>
+                      
                   </div>
                 </div>
               </div>

@@ -23,7 +23,7 @@ const UserProvider = ({ children }) => {
     const [phoneNumberCustomer, setPhoneNumberCustomer] = useState('')   ;
     const [listObject, setlistObject] = useState([]) ;
 
-
+    const [unreadCount, setUnreadCount] = useState(0);
 
   const [user, setUser] = React.useState({ email: '', auth: false });
   const [displayRouteRepair, setdisplayRouteRepair] = useState(false);
@@ -33,6 +33,7 @@ const UserProvider = ({ children }) => {
   const [AllBins, setAllBins] = useState([]);
   const [LoginTotal, setLoginTotal] = useState(null);
   const [accessRouteRegister, setaccessRouteRegister] = useState(false);
+  const [accessRouteOTP, setaccessRouteOTP] = useState(false);
 
   const [idObjectConnect, setidObjectConnect] = useState('');
   
@@ -83,8 +84,8 @@ const UserProvider = ({ children }) => {
     pressPercentBattery, setPressPercentBattery,changeNameFromMapToHeader, setChangeNameFromMapToHeader,getLoggerStolen, setgetLoggerStolen,
     displayNav, setDisplayNav, displayRoutesTwoPoint, setDisplayRoutesTwoPoint,isButtonDisabled, setIsButtonDisabled,
     accessRouteRegister, setaccessRouteRegister, idObjectConnect, setidObjectConnect, listAllDevices,setlistAllDevices,
-    inforCustomer, setInforCustomer, phoneNumberCustomer, setPhoneNumberCustomer, listObject, setlistObject 
-
+    inforCustomer, setInforCustomer, phoneNumberCustomer, setPhoneNumberCustomer, listObject, setlistObject ,
+    unreadCount, setUnreadCount, accessRouteOTP, setaccessRouteOTP
      }}>
       {children}    
     </UserContext.Provider>

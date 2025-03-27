@@ -12,10 +12,14 @@ import { useMapContext } from './usercontext';
 import { ToastContainer } from 'react-toastify';
 import {  toast } from 'react-toastify';
 import { UserContext } from './usercontext'; 
- 
-function HistoryObjectObject() {  
+import { useParams } from "react-router-dom";
+import { url } from './services/UserService';
+
+function HistoryObject() {       
+     
+    const {id} = useParams(); // Lấy tham số động từ URL   
     const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext);
-    const url = 'https://sawacoapi.azurewebsites.net' 
+    //const url = 'https://sawacoapi.azurewebsites.net' 
     const positionWarning = new L.Icon({ // vị trí GPS khi bị trộm đi qua
         iconUrl: require("./asset/images/positionWarning.png" ),
         iconSize: [60,60],
@@ -38,7 +42,7 @@ function HistoryObjectObject() {
     const [valueTo, onChangeTo] = useState(new Date());
     const [selectedOption, setSelectedOption] = useState('');
     const [selectedLogger, setSelecteLogger] = useState({});
-    const [listLoggerStolenHistoryObject, setListLoggerStolenHistoryObject] = useState([]);
+    const [historyObject, setHistoryObject] = useState([]); 
     const [listPositionWantToDisplay, setListPositionWantToDisplay] = useState([]);
     const [ZOOM_LEVEL, setZOOM_LEVEL] = useState(9) // độ zoom map
     const [center, setCenter] = useState({lat: 10.780064402624358,lng: 106.64558796192786 }) // center
@@ -48,42 +52,43 @@ function HistoryObjectObject() {
     const mapRef = useRef() 
     const [displayRoutes, setDisplayRoutes] = useState(false)
     const [isConvertDateTimeInPopup, setisConvertDateTimeInPopup] = useState(false)
-    
-    const getLogger = async () => {
+    const [Object, setObject] = useState({id:'', latitude: 0 , longitude: 0 });
+
+
+    const getObjectById = async () => {
       let success = false;
-      while (!success) {
+      while (!success) {   
         try {
-          const response = await axios.get(`${url}/Logger/GetAllLoggers`);
-          const LoggerData = response.data;
-    
+          const response = await axios.get(`${url}/GPSObject/GetObjectById?id=${id}`);
+          const ObjectData = response.data;
+          console.log(id)
           // Kiểm tra nếu dữ liệu nhận được hợp lệ
-          if (LoggerData && LoggerData.length > 0) {    
-            const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
-            setListLoggerStolenHistoryObject(ListStolen);   
+          if (ObjectData) {    
+            // const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
+            setObject(ObjectData);     
             success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
           } else {
             alert('ReLoad');
           }
         } catch (error) {
-          console.error('Get All Logger error, retrying...', error);
+          console.error('getObjectById error, retrying...', error);
           await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
         }
       }
     };
 
     useEffect(() => { 
-        getLogger()
-        setPercentBattery(0)
-        setMakerOpenPopup({})
+        getObjectById()
+        
     }, [])
 
     
 
-    useEffect(() => { // Cập nhật bản đồ với giá trị mới của center và ZOOM_LEVEL
+      useEffect(() => { // Cập nhật bản đồ với giá trị mới của center và ZOOM_LEVEL
         if (mapRef.current) {
               mapRef.current.setView(center, ZOOM_LEVEL);
         }
-      }, [center]);
+      }, [center, ZOOM_LEVEL]);
 
     const currentRoutingRef = useRef(null);
     
@@ -115,54 +120,54 @@ function HistoryObjectObject() {
           currentRoutingRef.current.addTo(mapRef.current);
     }
 
-    const RemoveRoute = () => {   // remove đường đi GPS Tracker
-      if (currentRoutingRef.current) {
-          currentRoutingRef.current.remove();
-          currentRoutingRef.current = null;
-      }
-    };
+    // const RemoveRoute = () => {   // remove đường đi GPS Tracker
+    //   if (currentRoutingRef.current) {
+    //       currentRoutingRef.current.remove();
+    //       currentRoutingRef.current = null;
+    //   }
+    // };
 
-    const calculateDistance = (point1, point2) => {
-      const latLng1 = L.latLng(point1.latitude, point1.longtitude);
-      const latLng2 = L.latLng(point2.latitude, point2.longtitude);
-      const distance = latLng1.distanceTo(latLng2);     
-      return distance;
-    };
+    // const calculateDistance = (point1, point2) => {
+    //   const latLng1 = L.latLng(point1.latitude, point1.longtitude);
+    //   const latLng2 = L.latLng(point2.latitude, point2.longtitude);
+    //   const distance = latLng1.distanceTo(latLng2);     
+    //   return distance;
+    // };
 
-    const handleChange = (event) => { // Chọn Logger để xem lịch sử
-        const HistoryObjectStolen = listLoggerStolenHistoryObject.find((item,index) => item.id === event.target.value )
-        setSelecteLogger(HistoryObjectStolen)
-        setSelectedOption(event.target.value);
-    };
+    // const handleChange = (event) => { // Chọn Logger để xem lịch sử
+    //     const HistoryObjectStolen = listLoggerStolenHistoryObject.find((item,index) => item.id === event.target.value )
+    //     setSelecteLogger(HistoryObjectStolen)
+    //     setSelectedOption(event.target.value);
+    // };
 
-    useEffect(() => {
-         if(action === 'Delete'){
-              const HistoryObjectStolen = listLoggerStolenHistoryObject.find((item,index) => item.id === selectedLogger.id )
-              setSelecteLogger(HistoryObjectStolen)
-         }
-         if(action === 'See'){
+    // useEffect(() => {
+    //      if(action === 'Delete'){
+    //           const HistoryObjectStolen = listLoggerStolenHistoryObject.find((item,index) => item.id === selectedLogger.id )
+    //           setSelecteLogger(HistoryObjectStolen)
+    //      }
+    //      if(action === 'See'){
 
-         }
-    },[action,listLoggerStolenHistoryObject])
+    //      }
+    // },[action,listLoggerStolenHistoryObject])
 
-    useEffect(() => {
-         if(action === 'Delete'){
-          setListPositionWantToDisplay([]);
-          setDisplayRoutes(false);          
-         }
-         if(action === 'See'){
+    // useEffect(() => {
+    //      if(action === 'Delete'){
+    //       setListPositionWantToDisplay([]);
+    //       setDisplayRoutes(false);          
+    //      }
+    //      if(action === 'See'){
 
-         }
-    },[selectedLogger])
+    //      }
+    // },[selectedLogger])
 
-    function changeDateToFixed(timestamp) {
-      const parts = timestamp.split('T');
-      const part2 = parts[0].split('-');
-      const newTimestamp = `${part2[0]}-${part2[2]}-${part2[1]}T${parts[1]}`;
-      return newTimestamp;
-    }
+    // function changeDateToFixed(timestamp) {
+    //   const parts = timestamp.split('T');
+    //   const part2 = parts[0].split('-');
+    //   const newTimestamp = `${part2[0]}-${part2[2]}-${part2[1]}T${parts[1]}`;
+    //   return newTimestamp;
+    // }
   
-    function findMinMaxTimestamps(filteredLines) {
+    function findMinMaxTimestamps(filteredLines) {  
       let minObj = filteredLines[0];
       let maxObj = filteredLines[0];
       filteredLines.forEach(item => {
@@ -181,175 +186,225 @@ function HistoryObjectObject() {
       return { min: minObj, max: maxObj };
     }
    
-
-
-    const handleShowRoute = () => { 
-        if(selectedOption === ''){
-                    toast.error('Bạn chưa chọn trạm cần xem')
+    const getPositionDevice = async (id, startOfDay, endOfDay) => {     
+      let success = false;
+      while (!success) {   
+        try {
+          const response = await axios.get(
+            `${url}/History/GetObjectPositionHistory/ObjectId=${id}?startDate=${startOfDay}&endDate=${endOfDay}`
+          );
+          const PositionDeviceData = response.data;
+    
+          if (PositionDeviceData) {
+            setHistoryObject(PositionDeviceData); 
+            console.log('PositionDeviceData', PositionDeviceData);         
+            success = true; 
+            toast.success("Đã lấy được lộ trình")  
+            setZOOM_LEVEL(9)    
+          } else {
+            alert('ReLoad');
+          }
+        } catch (error) {
+          console.error('getPositionDevice error, retrying...', error);     
+          await new Promise(resolve => setTimeout(resolve, 1000)); 
         }
-        else{
-            const startOfDay = new Date(valueFrom);                      
-            const endOfDay = new Date(valueTo);
+      }
+    };
 
-            if(startOfDay < endOfDay){
-              if( endOfDay < new Date('2024-10-02T23:59:59') || startOfDay > new Date('2024-10-14T13:30:00')    ){  // giữ nguyên không convert khi lọc nhưng convert ở popup
-                
+
+     const handleShowRoute = () => { 
+    
+    
                 setisConvertDateTimeInPopup(true)
-
-                const filteredLines = selectedLogger.stolenLines.filter(line => {                                     
-                      const timestamp = new Date(line.timestamp);
-                      return timestamp >= startOfDay && timestamp <= endOfDay;
-                });
-
-                if(filteredLines.length === 0){
-                  toast.error('Không có dữ liệu')
-                  setListPositionWantToDisplay([])
-                  setDisplayRoutes(false);    
-                }  
-                else{
-                    setBegin(findMinMaxTimestamps(filteredLines).min)
-                    setEnd(findMinMaxTimestamps(filteredLines).max)
-                    const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-                    setListPositionWantToDisplay(newArr);
-                    setDisplayRoutes(true); 
-                    setCenter({lat: 10.736910478129415 , lng: 106.66432499334259 })
-                    setZOOM_LEVEL(9)
+                const startOfDay = formatDateTime(valueFrom);
+                const endOfDay = formatDateTime(valueTo);
+    
+                getPositionDevice(id, startOfDay, endOfDay);
+    
+    
+                console.log('startOfDay', startOfDay)                  
+                console.log('endOfDay', endOfDay)  
+                       
+                if(startOfDay < endOfDay){
                 }
-              }    
-
-              else{  // convert khi lọc nhưng không convert ở popup
-                
-                setisConvertDateTimeInPopup(false)
-                
-                const LineAfterConvert = selectedLogger.stolenLines.map(item => {                                     
-                      const newItem = convertDateTimeToFilter(item);
-                      return newItem
-                });
-
-                const filteredLines = LineAfterConvert.filter(line => {                                     
-                      const   timestamp = new Date(line.timestamp);
-                      return  timestamp >= startOfDay && timestamp <= endOfDay;
-                });
-
-                if(filteredLines.length === 0){
-                  toast.error('Không có dữ liệu')
-                  setListPositionWantToDisplay([]);
-                  setDisplayRoutes(false); 
-                }  
                 else{
-                    setBegin(findMinMaxTimestamps(filteredLines).min)
-                    setEnd(findMinMaxTimestamps(filteredLines).max)
-                    const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-                    setListPositionWantToDisplay(newArr);
-                    setDisplayRoutes(true); 
-                    setCenter({lat:10.80896076479404 , lng: 106.68593859151143 })
-                    setZOOM_LEVEL(9)
-                }
-              }
-            }
-            else{
-              toast.error('Thời gian không hợp lệ')
-            }                    
+                  toast.error('Thời gian không hợp lệ')
+                }                    
+            
         }
-    }
 
-      const handleShowRouteAfterDelete = () => { 
-      if(selectedOption === ''){
-        toast.error('Bạn chưa chọn trạm cần xem')
-      }
-      else{
-          const startOfDay = new Date(valueFrom);         
-          const endOfDay = new Date(valueTo);
-          const filteredLines = selectedLogger.stolenLines.filter(line => {
-                  const timestampformat = changeDateToFixed(line.timestamp) 
-                  const timestamp = new Date(timestampformat);
-                  return timestamp >= startOfDay && timestamp <= endOfDay;
-          });
 
-          if(filteredLines.length === 0){
-              window.alert('Không có dữ liệu handleShowRouteAfterDelete')
-          }  
-          else{
-              setBegin( filteredLines[0] )
-              setEnd(filteredLines[filteredLines.length-1] )
-              const newArr = filteredLines.slice(1, -1);
-              setListPositionWantToDisplay(newArr);
-              setDisplayRoutes(true); 
-              setCenter({lat:filteredLines[0].latitude , lng: filteredLines[0].longtitude })
-              setZOOM_LEVEL(18)
-          }   
-      }
-  }
+          useEffect(() => { 
+              if(historyObject.length > 0){
+                setDisplayRoutes(true);
+              }
+              
+            }, [historyObject])
+
+    // const handleShowRoute = () => { 
+    //     if(selectedOption === ''){
+    //                 toast.error('Bạn chưa chọn trạm cần xem')
+    //     }
+    //     else{
+    //         const startOfDay = new Date(valueFrom);                      
+    //         const endOfDay = new Date(valueTo);
+
+    //         if(startOfDay < endOfDay){
+    //           if( endOfDay < new Date('2024-10-02T23:59:59') || startOfDay > new Date('2024-10-14T13:30:00')    ){  // giữ nguyên không convert khi lọc nhưng convert ở popup
+                
+    //             setisConvertDateTimeInPopup(true)
+
+    //             const filteredLines = selectedLogger.stolenLines.filter(line => {                                     
+    //                   const timestamp = new Date(line.timestamp);
+    //                   return timestamp >= startOfDay && timestamp <= endOfDay;
+    //             });
+
+    //             if(filteredLines.length === 0){
+    //               toast.error('Không có dữ liệu')
+    //               setListPositionWantToDisplay([])
+    //               setDisplayRoutes(false);    
+    //             }  
+    //             else{
+    //                 setBegin(findMinMaxTimestamps(filteredLines).min)
+    //                 setEnd(findMinMaxTimestamps(filteredLines).max)
+    //                 const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
+    //                 setListPositionWantToDisplay(newArr);
+    //                 setDisplayRoutes(true); 
+    //                 setCenter({lat: 10.736910478129415 , lng: 106.66432499334259 })
+    //                 setZOOM_LEVEL(9)
+    //             }
+    //           }    
+
+    //           else{  // convert khi lọc nhưng không convert ở popup
+                
+    //             setisConvertDateTimeInPopup(false)
+                
+    //             const LineAfterConvert = selectedLogger.stolenLines.map(item => {                                     
+    //                   const newItem = convertDateTimeToFilter(item);
+    //                   return newItem
+    //             });
+
+    //             const filteredLines = LineAfterConvert.filter(line => {                                     
+    //                   const   timestamp = new Date(line.timestamp);
+    //                   return  timestamp >= startOfDay && timestamp <= endOfDay;
+    //             });
+
+    //             if(filteredLines.length === 0){
+    //               toast.error('Không có dữ liệu')
+    //               setListPositionWantToDisplay([]);
+    //               setDisplayRoutes(false); 
+    //             }  
+    //             else{
+    //                 setBegin(findMinMaxTimestamps(filteredLines).min)
+    //                 setEnd(findMinMaxTimestamps(filteredLines).max)
+    //                 const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
+    //                 setListPositionWantToDisplay(newArr);
+    //                 setDisplayRoutes(true); 
+    //                 setCenter({lat:10.80896076479404 , lng: 106.68593859151143 })
+    //                 setZOOM_LEVEL(9)
+    //             }
+    //           }
+    //         }
+    //         else{
+    //           toast.error('Thời gian không hợp lệ')
+    //         }                    
+    //     }
+    // }
+
+  //     const handleShowRouteAfterDelete = () => { 
+  //     if(selectedOption === ''){
+  //       toast.error('Bạn chưa chọn trạm cần xem')
+  //     }
+  //     else{
+  //         const startOfDay = new Date(valueFrom);         
+  //         const endOfDay = new Date(valueTo);
+  //         const filteredLines = selectedLogger.stolenLines.filter(line => {
+  //                 const timestampformat = changeDateToFixed(line.timestamp) 
+  //                 const timestamp = new Date(timestampformat);
+  //                 return timestamp >= startOfDay && timestamp <= endOfDay;
+  //         });
+
+  //         if(filteredLines.length === 0){
+  //             window.alert('Không có dữ liệu handleShowRouteAfterDelete')
+  //         }  
+  //         else{
+  //             setBegin( filteredLines[0] )
+  //             setEnd(filteredLines[filteredLines.length-1] )
+  //             const newArr = filteredLines.slice(1, -1);
+  //             setListPositionWantToDisplay(newArr);
+  //             setDisplayRoutes(true); 
+  //             setCenter({lat:filteredLines[0].latitude , lng: filteredLines[0].longtitude })
+  //             setZOOM_LEVEL(18)
+  //         }   
+  //     }
+  // }
 
     const handleMapClickGetLocation = (e) => {  // lấy tọa độ khi Click vô Map
       console.log('lat: '+ e.latlng.lat)
       console.log('lng: '+ e.latlng.lng)
     };
 
-    const executeFunctions = async () => {
-      await  getLogger();       // Cập nhật lại danh sách Logger
-      setAction('Delete')      // Sau đó thực hiện hàm tiếp theo
-    };
+    // const executeFunctions = async () => {
+    //   await  getLogger();       // Cập nhật lại danh sách Logger
+    //   setAction('Delete')      // Sau đó thực hiện hàm tiếp theo
+    // };
 
-    const handleDeleteRoutes = async () => {
-    if (selectedOption === '') {
-      toast.error('Bạn chưa chọn trạm cần xóa')
-    } else {
-      
-        // Hiển thị cửa sổ xác nhận
-        const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa các dữ liệu này không?');
+    // const handleDeleteRoutes = async () => {
+    // if (selectedOption === '') {
+    //   toast.error('Bạn chưa chọn trạm cần xóa')
+    // } else {
+    //     // Hiển thị cửa sổ xác nhận
+    //     const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa các dữ liệu này không?');
+    //     if (confirmDelete) {
+    //         const startOfDay = new Date(valueFrom);
+    //         const endOfDay = new Date(valueTo);
+    //         if(startOfDay < endOfDay){
 
-        if (confirmDelete) {
+    //             const filteredLines = selectedLogger.stolenLines.filter(line => {
+    //             const timestamp = new Date(line.timestamp);
+    //             return timestamp >= startOfDay && timestamp <= endOfDay;
+    //             }); 
 
-            const startOfDay = new Date(valueFrom);
-            const endOfDay = new Date(valueTo);
-            if(startOfDay < endOfDay){
-
-                const filteredLines = selectedLogger.stolenLines.filter(line => {
-                const timestamp = new Date(line.timestamp);
-                return timestamp >= startOfDay && timestamp <= endOfDay;
-                }); 
-
-                if(filteredLines.length > 0){
-                  const startDate = formatDateTime(valueFrom);
-                  const endDate = formatDateTime(valueTo);
-                  const loggerId = selectedLogger.id;                             
-                  try {
-                      // Gọi API để xóa các phần tử trong stolenLine theo ngày
-                      const response = await axios.delete(`${url}/StolenLine/DeleteStolenLineByDate/LoggerId=${loggerId}?startDate=${startDate}&endDate=${endDate}`);
+    //             if(filteredLines.length > 0){
+    //               const startDate = formatDateTime(valueFrom);
+    //               const endDate = formatDateTime(valueTo);
+    //               const loggerId = selectedLogger.id;                             
+    //               try {
+    //                   // Gọi API để xóa các phần tử trong stolenLine theo ngày
+    //                   const response = await axios.delete(`${url}/StolenLine/DeleteStolenLineByDate/LoggerId=${loggerId}?startDate=${startDate}&endDate=${endDate}`);
                       
-                      if (response.status === 200) {
-                         
-                          toast.success('Xóa thành công!');                                           
-                          executeFunctions();
-                         
-                          
-                          
-                      } else {
-                          toast.error('Có lỗi xảy ra khi xóa!');
-                      }
-                  } catch (error) {
-                      console.error('Lỗi khi gọi API xóa:', error);
-                      toast.error('Có lỗi xảy ra khi xóa!');
-                  }
+    //                   if (response.status === 200) {
+    //                       toast.success('Xóa thành công!');                                           
+    //                       // executeFunctions();
+    //                   } else {
+    //                       toast.error('Có lỗi xảy ra khi xóa!');
+    //                   }
+    //               } catch (error) {
+    //                   console.error('Lỗi khi gọi API xóa:', error);
+    //                   toast.error('Có lỗi xảy ra khi xóa!');
+    //               }
     
-                }
-                else{
-                      toast.error('Không có dữ liệu');
-                }
-            }
-            else{
-              toast.error('Thời gian không hợp lệ')
-            }
+    //             }
+    //             else{
+    //                   toast.error('Không có dữ liệu');
+    //             }
+    //         }
+    //         else{
+    //           toast.error('Thời gian không hợp lệ')
+    //         }
       
            
 
            
-        } else {
+    //     } else {
      
-        }
-    }
-    }
+    //     }
+    // }
+    // }
+
+  
+
+
 
     function convertDateTimeBefore(inputString) {
       const [date, time] = inputString.split('T');    
@@ -380,67 +435,79 @@ function HistoryObjectObject() {
     const year = date.getFullYear();
     return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   };
+
+
   return (   
     <div className='HistoryObject'>    
-      <div className='wrapHistoryObject'>
-            <div className='filter'>        
-                 
-                   <div className='filterItem filterItemStart'>
-                                   <div>
-                                        Bắt đầu
-                                   </div>
-                                   <div>
+      <div className='wrapHistoryObject'>   
 
-                                     <DatePicker
-                                       selected={valueFrom}
-                                       onChange={onChangeFrom}
-                                       showTimeSelect
-                                       timeIntervals={1}
-                                       timeFormat="HH:mm:ss"
-                                       dateFormat="dd/MM/yyyy - HH:mm:ss"
-                                       popperPlacement="bottom-start"
-                                   
-                                     />
+            <div className='TitleMobileHistoryObject'>
+                       <div className='TitleItemMoblieHistoryObject'>
+                             { `Lộ trình đối tượng ${Object.name}` }    
+                        </div> 
+            </div>
+             
+            <div className='filterHistoryObject'>   
+            
+                                        <div className='divTimeHistoryObject'>
+                                        <div className='filterItemHistoryObject filterItemStartHistoryObject'>
+                                                               <div>    
+                                                                    Bắt đầu
+                                                               </div>
+                                                               <div>
+                            
+                                                                 <DatePicker
+                                                                   selected={valueFrom}
+                                                                   onChange={onChangeFrom}
+                                                                   showTimeSelect
+                                                                   timeIntervals={1}
+                                                                   timeFormat="HH:mm:ss"
+                                                                   dateFormat="dd/MM/yyyy - HH:mm:ss"
+                                                                   popperPlacement="bottom-end"
+                                                                 />
+                                                               </div>
+                                                 </div> 
+                                                 <div className='filterItemHistoryObject filterItemEndHistoryObject'>
+                                                               <div>
+                                                                 Kết thúc
+                                                               </div>
+                                                               <div>  
+                                                               
+                                                               <DatePicker
+                                                                     selected={valueTo}
+                                                                     onChange={onChangeTo}
+                                                                     showTimeSelect
+                                                                     timeIntervals={1}
+                                                                     timeFormat="HH:mm:ss"     
+                                                                     dateFormat="dd/MM/yyyy - HH:mm:ss"
+                                                                     popperPlacement="bottom-end"
+                                                                 />
+                                                               </div>
+                                                 </div>
+                                        </div>                     
+                                               
+            
+                                                 <div className='filterItemButtonHistoryObject'>
+                                                               <button 
+                                                                   type="button" 
+                                                                   class="btn btn-info"
+                                                                   onClick={handleShowRoute}
+                                                               
+                                                               >Xem</button>
+                                                               
+                                                 </div>
+                            
+            </div>  
 
-                                   
-                                   </div>
-                     </div> 
-                     <div className='filterItem filterItemEnd'>
-                                   <div>
-                                     Kết thúc
-                                   </div>
-                                   <div>  
-                                   
-                                   <DatePicker
-                                         selected={valueTo}
-                                         onChange={onChangeTo}
-                                         showTimeSelect
-                                         timeIntervals={1}
-                                         timeFormat="HH:mm:ss"
-                                         dateFormat="dd/MM/yyyy - HH:mm:ss"
-                                         popperPlacement="bottom-start"
-                                     />
+            <div className='mapStolenLineObject'>     
 
+                    <div className='Title'>   
+                       <div className='TitleItem'>
+                              { `Lộ trình di chuyển của đối tượng ${Object.name}` }     
+                        </div> 
+                    </div>  
 
-                                   </div>
-                     </div>
-                     <div className='filterItem filterItemButton'>
-                                   <button 
-                                       type="button" 
-                                       class="btn btn-info"
-                                       onClick={handleShowRoute}
-                                   
-                                   >Xem</button>
-                                   <button 
-                                       type="button" 
-                                       class="btn btn-danger"
-                                       onClick={handleDeleteRoutes}
-                                   >Xóa</button>
-                     </div>
-
-                  </div>
-                  <div className='mapStolenLine'>             
-              <MapContainer 
+                  <MapContainer 
                           center={center} 
                           zoom={ZOOM_LEVEL}     
                           ref={mapRef}>
@@ -450,21 +517,24 @@ function HistoryObjectObject() {
                             
                         />
                         <MyClickHandlerGetLocation onClick={handleMapClickGetLocation}/>                                                           
-                                {displayRoutes &&  listPositionWantToDisplay.map((item,index)=>(
+                                {displayRoutes &&  historyObject.map((item,index)=>(
                                   <Marker 
                                       className='maker'
-                                      position={[item.latitude , item.longtitude]}
+                                      position={[item.latitude , item.longitude]}
                                       icon= { positionWarning } 
                                       key={ index }                               
                                   >
                                     <Popup>
                                         <div className='div-popup'>  
-                                            <div>{ isConvertDateTimeInPopup ? convertDateTimeBefore(item.timestamp) : convertDateTimeAfter(item.timestamp)}</div>                                                                    
+                                        <div>{ convertDateTimeBefore(item.timestamp) }</div>                                                                         
                                         </div>                                                                             
                                     </Popup>    
                                   </Marker>
                                 ))} 
-                                {displayRoutes && 
+
+
+
+                                {/* {displayRoutes && 
                                   <Marker 
                                       className='maker'
                                       position={[begin.latitude , begin.longtitude]}
@@ -478,8 +548,9 @@ function HistoryObjectObject() {
                                         </div>                                                                             
                                     </Popup>    
                                 </Marker>
-                                } 
-                                {displayRoutes && 
+                                }  */}
+
+                                {/* {displayRoutes && 
                                   <Marker 
                                       className='maker'    
                                       position={[end.latitude , end.longtitude]}
@@ -493,17 +564,14 @@ function HistoryObjectObject() {
                                         </div>                                                                             
                                     </Popup>    
                                 </Marker>
-                                } 
+                                }  */}
 
 
                     </MapContainer>
-      </div>
-      </div>                       
-     
-              
+            </div>
 
-     
-      <ToastContainer
+            </div>                       
+                      <ToastContainer
                         position="top-right"
                         autoClose={5000}
                         hideProgressBar={false}
@@ -515,12 +583,12 @@ function HistoryObjectObject() {
                         pauseOnHover
                         theme="light"
                         containerId="HistoryObject"
-                        
-
                      />
-    </div>
+            </div>
   )
 }
+
+
 function MyClickHandlerGetLocation({ onClick }) {
   const map = useMapEvent('click', (e) => {
     onClick(e);
@@ -528,4 +596,4 @@ function MyClickHandlerGetLocation({ onClick }) {
   
   return null;   
   }     
-export default HistoryObjectObject   
+export default HistoryObject      

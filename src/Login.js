@@ -86,14 +86,6 @@ function Login() {
           sessionStorage.removeItem('accessRegister');  
           setaccessRouteRegister(false)
           toast.success('Đăng nhập thành công')
-
-         
-
-
-
-
-
-
           navigate('/map')   
       }
       }    
@@ -105,7 +97,8 @@ function Login() {
         navigate('/Register');   
   }
 
-  console.log('ListAllCustomer',ListAllCustomer)
+  console.log('ListAllCustomer', ListAllCustomer)
+
       return (
         <div class="containerLogin">
                     {loading && (

@@ -26,8 +26,12 @@ import "react-clock/dist/Clock.css";
 import { AiFillWarning } from "react-icons/ai";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import moment from "moment";
+import { SlCheck } from "react-icons/sl";
 function Detail() {  
-  
+   const [image, setImage] = useState(null);
+    const [isPressed, setIsPressed] = useState(false);
+    const [isOn, setIsOn] = useState(false);   
+    const [isEmergency, setIsEmergency] = useState(false);
     const location = useLocation();     
     const [time, setTime] = useState("00:00:00"); // Giá trị mặc định
     const [ObjectIsConnect, setObjectIsConnect] = useState({}) ;     
@@ -42,11 +46,7 @@ function Detail() {
     const [showModalUpdateFirmware, setshowModalUpdateFỉmware] = useState(false);                 
     const [Device, setDevice] = useState({id:'', latitude: 0 , longitude: 0 });   
     const [listHistorBattery, setListHistorBattery] = useState([]);   
-    const [isdisplayChart, setIsdisplayChart] = useState(false);   
     
-    
-        
-     
     const getDeviceById = async () => { 
       
       setIsLoading(true); // Bắt đầu loading
@@ -72,7 +72,7 @@ function Detail() {
         }
       }
 
-      setIsLoading(false); // Kết thúc loading sau khi lấy dữ liệu xong
+     
     };
 
 
@@ -89,6 +89,38 @@ function Detail() {
       }
       
     }, [idDevice]) 
+
+    useEffect(() => {  
+      if(Device.id !== ''){
+        setImage(Device.imagePath) 
+      }
+      
+    }, [Device]) 
+
+    useEffect(() => {  
+      if(Device.id !== ''){
+        setTime(extractTime(Device.alarmTime))  
+        if(Device.emergency){
+          setIsEmergency(true)
+        }
+        else{
+          setIsEmergency(false)
+        }
+
+
+        if(Device.bluetooth === "True"){
+          setIsOn(true)
+        }
+        else{
+          setIsOn(false)  
+        }
+
+        setIsLoading(false); // Kết thúc loading sau khi lấy dữ liệu xong
+        
+  
+      }
+      
+    }, [Device]) 
 
     const getAllObject = async () => {   
       let success = false;
@@ -117,14 +149,14 @@ function Detail() {
         getAllObject()   
       }
          
-    }, [phone])
+    }, [phone])   
 
-    useEffect(() => {  
-      if(listHistorBattery.length > 0){  
-        setIsdisplayChart(true)
-      }
-      
-    }, [listHistorBattery]) 
+    // useEffect(() => {  
+    //   if(listHistorBattery.length > 0){  
+    //     setIsdisplayChart(true)
+    //   }
+         
+    // }, [listHistorBattery]) 
 
     
     useEffect(() => {  
@@ -152,14 +184,14 @@ function Detail() {
 
     const [fileName, setFileName] = useState("");
     
-    const handleFileChange = (event) => {
-        const file = event.target.files[0];
-        if (file) {
-          setFileName(file.name);
-        } else {
-          setFileName("");
-        }
-    };
+    // const handleFileChange = (event) => {
+    //     const file = event.target.files[0];
+    //     if (file) {
+    //       setFileName(file.name);
+    //     } else {
+    //       setFileName("");
+    //     }
+    // };
 
 
     const sortByTimestamp = (data) => {
@@ -184,7 +216,8 @@ function Detail() {
 
             setListHistorBattery(sortedData); 
             console.log('PositionDeviceData', PositionDeviceData);         
-            success = true;   
+            success = true; 
+            toast.success("Đã lấy được mức pin")  
           } else {
             alert('ReLoad');
           }
@@ -206,9 +239,9 @@ const scanBluetoothDevices = async () => {
 
       console.log(device)
 
-      if (device) {
-          setDevices(prevDevices => [...prevDevices, device.name || 'Không có tên']);
-      }
+      // if (device) {
+      //     setDevices(prevDevices => [...prevDevices, device.name || 'Không có tên']);
+      // }
   } catch (error) {
       console.error('Lỗi khi quét thiết bị Bluetooth:', error);
   }
@@ -220,6 +253,7 @@ const handleScanAndShow = async () => {
 };
 
     const callAPIUpdateObjectById = async (bluetoothStatus) => {
+      const phoneNumer = sessionStorage.getItem('phoneNumer');
       let success = false;
       while (!success) {   
         try {
@@ -231,8 +265,8 @@ const handleScanAndShow = async () => {
               "CurrentTime": "0001-01-01T00:00:00",   
               "AlarmTime": `0001-01-01T${time}`,
               "BlueTooth": bluetoothStatus,  // ✅ Nhận giá trị "ON" hoặc "OFF"
-              "Emergency": true,
-              "PhoneNumber": "0888927971"
+              "Emergency": isEmergency,
+              "PhoneNumber": phoneNumer
             }
           );
 
@@ -248,11 +282,90 @@ const handleScanAndShow = async () => {
           await new Promise(resolve => setTimeout(resolve, 1000)); 
         }
       }
-
-      handleScanAndShow(); 
-
-
     };
+
+
+
+    const callAPIUpdateObjecEmergencytById = async (StatusEmergency) => {
+
+      console.log('StatusEmergency', StatusEmergency)
+      let success = false;
+      while (!success) {   
+        try {
+
+          const phoneNumer = sessionStorage.getItem('phoneNumer');
+          const response = await axios.patch(`${url}/GPSObject/UpdateObjectInformation?ObjectId=${ObjectIsConnect.id}`, 
+            {
+              "Longitude": ObjectIsConnect.longitude,
+              "Latitude": ObjectIsConnect.latitude,
+              "SafeRadius": ObjectIsConnect.safeRadius,
+              "CurrentTime": "0001-01-01T00:00:00",   
+              "AlarmTime": `0001-01-01T${time}`,
+              "BlueTooth": isOn ? "ON" : "OFF",  // ✅ Nhận giá trị "ON" hoặc "OFF"
+              "Emergency": StatusEmergency,
+              "PhoneNumber": phoneNumer
+            }
+          );
+
+          const ObjectData = response.data;
+          console.log(response.data)
+          if (ObjectData === 'Update successfully!') { 
+            toast.success(`Trạng thái cảnh báo là ${StatusEmergency ? "Khẩn cấp" : "Bình thường"}`);
+            success = true;
+          } else {  
+            toast.error("Xác lập không thành công");
+          }
+        } catch (error) {
+          console.error("callAPIUpdateObjecEmergencytById error, retrying...", error);
+          await new Promise(resolve => setTimeout(resolve, 1000)); 
+        }
+      }
+    };
+
+
+    const callAPIUpdateObjecAlarmTimetById = async (timeObject) => {
+
+     
+      let success = false;
+      while (!success) {   
+        try {
+          const response = await axios.patch(`${url}/GPSObject/UpdateObjectInformation?ObjectId=${ObjectIsConnect.id}`, 
+            {
+              "Longitude": ObjectIsConnect.longitude,
+              "Latitude": ObjectIsConnect.latitude,
+              "SafeRadius": ObjectIsConnect.safeRadius,
+              "CurrentTime": "0001-01-01T00:00:00",   
+              "AlarmTime": `0001-01-01T${timeObject}`,
+              "BlueTooth": isOn ? "ON" : "OFF",  // ✅ Nhận giá trị "ON" hoặc "OFF"
+              "Emergency": isEmergency,    
+              "PhoneNumber": "0888927971"
+            }
+          );
+
+          const ObjectData = response.data;
+          console.log(response.data)
+          if (ObjectData === 'Update successfully!') { 
+            toast.success(`Thời gian báo thức là ${timeObject} hàng ngày`);
+            success = true;
+          } else {  
+            toast.error("Xác lập không thành công");
+          }
+        } catch (error) {
+          console.error("callAPIUpdateObjecEmergencytById error, retrying...", error);
+          await new Promise(resolve => setTimeout(resolve, 1000)); 
+        }
+      }
+    };
+
+
+    const handleClickAlarmTime = async () => {
+      setIsPressed(true);
+      await callAPIUpdateObjecAlarmTimetById(time);
+      setTimeout(() => setIsPressed(false), 200); // Giữ hiệu ứng 200ms
+    };
+
+
+
     
     const firstRender = useRef(true); // Biến cờ để kiểm tra lần đầu render
     useEffect(() => {
@@ -310,19 +423,87 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
+const extractTime = (dateTimeString) => {
+  return dateTimeString.split("T")[1]; // Lấy phần sau "T"
+};
+
+    const toggleSwitch = () => {
+      const newStatus = !isOn;
+      setIsOn(newStatus);
+      callAPIUpdateObjectById(newStatus ? "ON" : "OFF");
+      scanBluetoothDevices()             
+    };
+
+    const toggleSwitchWarning = () => {
+      const newStatus = !isEmergency;
+      setIsEmergency(newStatus);
+      callAPIUpdateObjecEmergencytById(newStatus);
+          
+    };
+
+    const [file, setFile] = useState(null);
+    const [message, setMessage] = useState("");
+
+    const handleFileChange = (event) => {
+      setFile(event.target.files[0]);
+    };
+
+
+    const handleUpload = async () => {
+      if (!file) {
+        setMessage("Vui lòng chọn một file .bin");
+        return;
+      }
+  
+      const formData = new FormData();
+      formData.append("firmware", file);
+  
+      try {
+        const response = await axios.post(
+          "https://mygps.runasp.net/Firmware/upload/version=1", // API của bạn
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+  
+        if (response.status === 200) {
+          setMessage("Tải lên thành công!");
+        } else {
+          setMessage("Lỗi khi tải lên!");
+        }
+      } catch (error) {
+        setMessage(`Lỗi: ${error.message}`);
+      }
+    };
+
 
 
 return (
-    <div className='fatherInforDevice'>
-      <div className='wrapperInforDevice'>   
+    <div className='fatherInforDetailDevice'>    
+      <div className='wrapperInforDetailDevice'>   
 
-              <div className='InforDeviceTitle'>
-                  <div className='InforDeviceTitleItem'>
+              <div className='InforDetailDeviceTitle'>
+                  <div className='InforDetailDeviceTitleItem'>
                       Thông tin thiết bị
                   </div>  
-              </div>
-              <div className='imgDevice'>    
-                <img src={imgDevice} alt=''/>      
+              </div>     
+                
+              <div className="Wrapimage">                       
+                  <div
+                       className="image-containerDevice"                  
+                  >
+                   {image ? ( 
+                              <img src={image} alt="Uploaded" className="uploaded-imageDevice" 
+                                 
+                              />
+                            ) : (
+                              <span className="placeholder-text">Chưa chọn ảnh</span>
+                            )}
+                  </div>
+                                  
               </div>
 
               {isVisible && (
@@ -347,15 +528,15 @@ return (
                         )}
                     </div>
                 </div>
-            )}
+              )}
 
 
-          {isLoading ?  (
+          {isLoading ?  (  
                     <div className="loadingContainer">
                       <div className="spinner"></div> {/* Hiển thị hiệu ứng loading */}
                       <p>Đang tải dữ liệu...</p>
                     </div>
-                  ) 
+                  )     
               
               :
 
@@ -370,14 +551,14 @@ return (
                                   <MdDriveFileRenameOutline className='informationDeviceItemIcon'/>
                               </div>  
                               <div className='informationDeviceItemFirstTitle'>Tên thiết bị:</div>
-                          </div> 
-                          
+                          </div>                      
+                                                                          
                           <div className='informationDeviceItemSecond'>
-                                <div className='informationDeviceItemSecondText'>
-                                    {Device.name}
-                                </div>                                
-                          </div>
-
+                                <div className='informationDeviceItemSecondText'>                                                                          
+                                    {Device.name}                                        
+                                </div>                                             
+                          </div>             
+                                     
                         </div>
                       
                         <div className='informationDeviceItem'>
@@ -385,14 +566,14 @@ return (
                               <div className='informationDeviceItemFirstIcon'>
                                   <IoIosTime className='informationDeviceItemIcon'/>  
                               </div>  
-                              <div className='informationDeviceItemFirstTitle'>Thời gian cập nhật lần cuối:</div>
+                              <div className='informationDeviceItemFirstTitle'>Cập nhật lần cuối:</div>
                           </div> 
                             
                           <div className='informationDeviceItemSecond'>
                                 <div className='informationDeviceItemSecondText'>
-                                      {convertDateTimeBefore(Device.timeStamp)}
+                                      {convertDateTimeBefore(Device.timeStamp) !== '01-01-2025 00:00:00' ? `${convertDateTimeBefore(Device.timeStamp)}` : `Chưa được cập nhật`}
                                 </div>                                
-                          </div>
+                          </div>                      
 
                         </div>
 
@@ -408,15 +589,15 @@ return (
                           <div className='informationDeviceItemSecond'>
                             <div className='informationDeviceItemSecondText'>
                               <TimePicker
-                                onChange={setTime}       
-                                value={time}
+                                onChange={setTime}        
+                                value={time}  
                                 format="HH:mm:ss" // Hiển thị giờ, phút, giây (24h)
                                 maxDetail="second" // Cho phép chỉnh cả giây
                                 disableClock={false} // Ẩn đồng hồ tròn   
                                 className='alarmTimeInput'
                               />
                             </div>  
-                            <button className='btnAlarm' onClick={() => callAPIUpdateObjectById("ON")}>XÁC NHẬN</button>                           
+                            <button className={`btnAlarm transition-all duration-200 active:scale-90 ${isPressed ? "bg-gray-300" : ""}`}  onClick={() => handleClickAlarmTime()}><SlCheck className='iconConfirm'/></button>                           
                           </div>  
                         </div>
 
@@ -425,15 +606,34 @@ return (
                               <div className='informationDeviceItemFirstIcon'>
                                   <GrConnect className='informationDeviceItemIcon'/>  
                               </div>        
-                              <div className='informationDeviceItemFirstTitle'>Đối tượng đang giám sát:</div>
+                              <div className='informationDeviceItemFirstTitle'>Đối tượng giám sát:</div>
                           </div> 
                             
                           <div className='informationDeviceItemSecond'>
                                 <div className='informationDeviceItemSecondText'>
-                                     {ObjectIsConnect.name}
-                                </div>                                
+                                        {ObjectIsConnect?.name || "Chưa có"}
+                                </div>                                      
                           </div>
-                        </div>
+
+                        </div>  
+
+                        {/* <div className='informationDeviceItem'>
+                          <div className='informationDeviceItemFirst'>
+                              <div className='informationDeviceItemFirstIcon'>
+                                  <GrConnect className='informationDeviceItemIcon'/>  
+                              </div>          
+                              <div className='informationDeviceItemFirstTitle'>FirmWare:</div>
+                          </div>    
+                            
+                          <div className='informationDeviceItemSecond'>
+                                <div className='informationDeviceItemSecondText'>
+                                    
+                                    <input type="file" accept=".bin" onChange={handleFileChange} />
+                                    <button onClick={handleUpload}>Upload</button>
+                                    {message && <p>{message}</p>}
+                                </div>                                
+                          </div>  
+                        </div> */}
 
                         <div className='informationDeviceItem'>
                           <div className='informationDeviceItemFirst'>
@@ -444,8 +644,22 @@ return (
                           </div> 
 
                           <div className="informationDeviceItemSecond">
-                          <button className='btn-on' onClick={() => callAPIUpdateObjectById("ON")}>ON</button>
-                          <button className='btn-off' onClick={() => callAPIUpdateObjectById("OFF")}>OFF</button>
+
+                          <div className="flex items-center gap-3">
+                            <div 
+                                className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-all ${isOn ? 'bg-green-500' : 'bg-red-500'}`} 
+                                onClick={toggleSwitch}
+                            >
+                                <div 
+                                    className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${isOn ? 'translate-x-7' : ''}`}
+                                ></div>
+                            </div>
+                            <span className={`text-lg font-semibold ${isOn ? 'text-green-500' : 'text-red-500'}`}>{isOn ? "ON" : "OFF"}</span>
+                          </div>
+
+
+                            {/* <button className='btn-on' onClick={() => callAPIUpdateObjectById("ON")}>ON</button>
+                            <button className='btn-off' onClick={() => callAPIUpdateObjectById("OFF")}>OFF</button> */}
                           </div>
                         </div>
 
@@ -458,8 +672,19 @@ return (
                           </div> 
 
                           <div className="informationDeviceItemSecond">
-                                <button className='btn-off' onClick={() => callAPIUpdateObjectById("ON")}>EMERGENCY</button>
-                                <button className='btn-on' onClick={() => callAPIUpdateObjectById("OFF")}>NORMAL</button>
+                              <div className="flex items-center gap-3">
+                                <div 
+                                    className={`w-20 h-7 flex items-center rounded-full p-1 cursor-pointer transition-all ${isEmergency ? 'bg-red-500' : 'bg-green-500'}`} 
+                                    onClick={toggleSwitchWarning}
+                                >
+                                    <div 
+                                        className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${isEmergency ? 'translate-x-12' : ''}`}
+                                    ></div>
+                                </div>
+                                <span className={`text-lg font-semibold ${isEmergency ? 'text-red-500' : 'text-green-500'}`}>{isEmergency ? "EMERGENCY" : "NORMAL"}</span>
+                              </div>
+                                    {/* <button className='btn-off' onClick={() => callAPIUpdateObjectById("ON")}>EMERGENCY</button>
+                                    <button className='btn-on' onClick={() => callAPIUpdateObjectById("OFF")}>NORMAL</button> */}
                           </div>
 
                         </div>          
@@ -470,8 +695,10 @@ return (
 
                 <h2 className="text-xl font-bold mb-4">Biểu đồ mức pin</h2>
 
-                <div className='filterBattery'>                        
-                                   <div className='filterItemBattery filterItemStartBattery'>
+                <div className='filterBattery'>   
+
+                            <div className='divTime'>
+                            <div className='filterItemBattery filterItemStartBattery'>
                                                    <div>    
                                                         Bắt đầu
                                                    </div>
@@ -505,7 +732,10 @@ return (
                                                      />
                                                    </div>
                                      </div>
-                                     <div className='filterItemBattery filterItemButtonBattery'>
+                            </div>                     
+                                   
+
+                                     <div className='filterItemButtonBattery'>
                                                    <button 
                                                        type="button" 
                                                        class="btn btn-info"
@@ -529,10 +759,10 @@ return (
                     </LineChart>
                   </ResponsiveContainer>
                 </div> */}
-
+    
 
                 <div className="w-full h-[400px]">
-                 <ResponsiveContainer width="100%" height="100%">
+                 <ResponsiveContainer width="100%" height="100%" style={{ backgroundColor: "#fff" }}>
                    <LineChart data={formattedData}>
                      <CartesianGrid strokeDasharray="3 3" />
                      <XAxis dataKey="time" />
@@ -542,11 +772,13 @@ return (
                    </LineChart>
                  </ResponsiveContainer>
                 </div>   
+    
 
-                </div>
 
-               
-                
+                </div>  
+
+                                  
+          
           
       </div>
       

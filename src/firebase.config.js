@@ -1,21 +1,22 @@
-// Import the functions you need from the SDKs you need
+// Thay vì: import firebase from "firebase/app";
+// Hãy dùng:
 import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth"; // Ví dụ cho Auth  
 import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDyj5teLkkg6vO5uMmm46eDWD2k9Vt8lL0",
-  authDomain: "otp-project-5ce6c.firebaseapp.com",
-  projectId: "otp-project-5ce6c",
-  storageBucket: "otp-project-5ce6c.firebasestorage.app",
-  messagingSenderId: "805489989061",
-  appId: "1:805489989061:web:0ca7d1f1311b6201e467ac",
-  measurementId: "G-G51Y6E6HY6"
-};
+  apiKey: "AIzaSyAONJsTaj5vUSkIMgTHo9_qMppIDGQxPFo",
+  authDomain: "otp-2-4dc2a.firebaseapp.com",
+  projectId: "otp-2-4dc2a",
+  // storageBucket: "otp-2-4dc2a.firebasestorage.app",
+  storageBucket: "otp-2-4dc2a.appspot.com",
+  messagingSenderId: "797041623234",
+  appId: "1:797041623234:web:30a956b32e9f80132ffb5b",
+  measurementId: "G-HEBN6Q19CT"
+};  
+  
+// Khởi tạo Firebase
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
+export const auth = getAuth(app);
+

@@ -1,7 +1,7 @@
 .fatherObject{
     width: 100%;
     height: 100vh;
-       
+    overflow: auto;
     .wrapperObject{
         width: 100%;
         padding: 20px 20px 20px 20px;   
@@ -65,33 +65,33 @@
             justify-content: space-between;
             height: 60px;
             align-items: center;
-        .divInputFindObject{
-                width: 90%;     
-        }
-        .divAddObject{
-                width: 6%; 
-                height: 100%;
-               
-                .iconAddObject{
-                    font-size: 60px;
-                    color: rgb(0, 0, 0);
-                }
-                
-        }
-        @media (max-width: 768px) {
-            width: 100%;
-        }
+            .divInputFindObject{
+                    width: 90%;     
+            }
+            .divAddObject{
+                    width: 6%; 
+                    height: 100%;
+
+                    .iconAddObject{
+                        font-size: 60px;
+                        color: rgb(0, 0, 0);
+                    }
+
+            }
+            @media (max-width: 768px) {
+                width: 100%;
+            }
 
         }
 
-    .wrapperContainerObject{
-        width: 80%;
-        margin-top: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
+        .wrapperContainerObject{
+            width: 80%;
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         
-        .containerDevice{
+        .containerObject{
             border: 1px solid rgb(153, 148, 148);
             box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.3);  
             width: 100%;
@@ -101,35 +101,51 @@
             display: flex;
             height: 100px;
             justify-content: space-between;
-            .itemDevice{
+            .itemObject{
                 display: flex;
                 height: 100%;
             }
-            .itemDeviceFirst{
+            .itemObjectFirst{
                     
                     width: 45%;
                     display: flex;
                     align-items: center;
-                    .divIconDevice{
+
+                    .divIconObject{
+                        
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        width: 15%;
-                        .iconDevice{
+                        width: 15%;         
+                        
+                        .iconObject{
+                            
                             font-size: 50px;
                             color: rgb(0, 0, 0);
+
+
+                            @media (max-width: 768px) {
+                                font-size: 35px;  
+                                     
+                            }
                         }
                     }
-                    .divIconNameAndPin{ 
-                        width: 40%;
-                        .name{
+                    .divIconNameAndPinObject{ 
+                       
+                        width: 50%;   
+                        .nameObject{
                             font-size: 20px;
+                            @media (max-width: 768px) {
+                                font-size: 25px; 
+                                width: 100%; 
+                            }
                         }
-                        .status {
+                        .statusObject {  
                             font-style: italic;
                             color: rgb(245, 49, 14);
                             display: flex;
                             align-items: center; // Căn giữa icon và chữ
+                           
                         }
                         
                         .warning-text {
@@ -141,31 +157,53 @@
                         .warning-icon {
                             font-size: 1.2em; // Điều chỉnh kích thước icon nếu cần
                         }
-                        // .divIconPin{
-                        //     display: flex;
-                        //     align-items: center;
-                        //      .iconPin{
-                        //         font-size: 40px;
-                        //         color: rgb(9, 144, 255);
-                        //     }  
-                        // }                       
+
+                        @media (max-width: 768px) {
+                            width: 100%;
+
+                             
+                           
+                        }   
+                                        
                     }
 
-                    .connected{
+                    .connectedObject{
                         
                         margin-left: 50px;
                         align-items: center;
                         color: rgb(84, 225, 108);
                         font-size: 15px;
                         font-weight: 600;
+
+                        @media (max-width: 768px) {
+                            margin-left: 0px;
+                            width: 45%;
+                            font-size: 12px; 
+                           
+
+                        }
                     }
-                   
-                    .disconnected {
+                    
+                    .disconnectedObject {
+                            
                         margin-left: 50px;
                         align-items: center;
                         color: rgb(255, 0, 0);
                         font-size: 15px; 
-                        font-weight: 600;
+                        font-weight: 600;   
+
+                        @media (max-width: 768px) {
+                            margin-left: 0px;
+                            width: 45%;
+                            font-size: 12px;  
+                            
+                        }
+                    }
+
+                    @media (max-width: 768px) {
+                        width: 100%;
+                        justify-content: space-between;
+                        
                     }
 
             }
@@ -180,24 +218,43 @@
                     width: 30%;
                     color: black;
                     .itemObjectecondItem{  
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-around;
-                    background-color: aliceblue;
-                    border: 2px solid rgb(0, 0, 0);
-                    border-radius: 10px;
-                    width: 100%;
-                    height: 50px;
-                    &:hover{
-                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-around;
+                        background-color: aliceblue;
+                        border: 2px solid rgb(0, 0, 0);
+                        border-radius: 10px;
+                        width: 100%;
+                        height: 50px;
+                        &:hover{
+                            cursor: pointer;
 
-                    }
-                    .itemObjectecondItemIcon{
-                        font-size: 30px;
-                        color: red;
+                        }
+                        .itemObjectecondItemIcon{
+                            font-size: 30px;
+                            color: red;
+
+                            @media (max-width: 768px) {
+                                font-size: 25px;
+                            }
+                        }
+
+                        .itemObjectecondItemText{
+
+                            @media (max-width: 768px) {      
+                                font-size: 15px;  
+                            }   
+
+                        }
+                    }   
+   
+                    @media (max-width: 768px) {     
+                        width: 30%;
+                        
                     }
                 }
-                }
+
+
                 .itemObjectecondItemConnect{
                     display: flex;
                     align-items: center;
@@ -211,19 +268,51 @@
                         cursor: pointer;
 
                     }
-                    .itemObjectecondItemIcon{
+                    .itemObjectecondItemIconConnect{
                         font-size: 30px;
                         color: red;
+                        @media (max-width: 768px) {   
+                            font-size: 25px;  
+                        }  
                     }
+
+                    .itemObjectecondItemTextConnect{
+                        font-size: 17px;
+                        
+                        @media (max-width: 768px) {   
+                            font-size: 15px;  
+                        }  
+                    }
+
+                    @media (max-width: 768px) {   
+                        font-size: 25px;  
+                        font-weight: 400;
+                    }   
+                }
+
+
+                @media (max-width: 768px) {
+                    width: 100%;  
+                    
+                    display: flex   
+                    
                 }
                 
                 
+            }
+
+            @media (max-width: 768px) {    
+                width: 100%;
+                display: flex;  
+                flex-direction: column;  
+                height: 150px;    
             }
         }
 
 
         @media (max-width: 768px) {
             width: 100%;
+            
         }
     }
    

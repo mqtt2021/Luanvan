@@ -17,15 +17,16 @@ function ModelConfirm({ show , handleClose, dataLoggerLineStolen}) {
         }        
     };
 
-    const handleDelete = () =>{
+    const handleDelete = () => {
         if(dataLoggerLineStolen.stolenLine.length > 0){
             DeleteStolenLine()
         }
         else{
-           
             toast.error('Không có dữ liệu GPS')
         }
     }
+
+
   return (
     <div  className="modal show"
       style={{ display: 'block', position: 'initial' , zIndex: '4000' }}>

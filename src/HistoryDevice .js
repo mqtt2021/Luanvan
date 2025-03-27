@@ -122,12 +122,12 @@ function HistoryDevicesDevice() {
     // }, [])
 
     
-
+   
     useEffect(() => { // Cập nhật bản đồ với giá trị mới của center và ZOOM_LEVEL
         if (mapRef.current) {
               mapRef.current.setView(center, ZOOM_LEVEL);
         }
-      }, [center]);
+      }, [center, ZOOM_LEVEL]);  
 
     const currentRoutingRef = useRef(null);
     
@@ -236,7 +236,9 @@ function HistoryDevicesDevice() {
     
           if (PositionDeviceData) {
             setPositionDevice(PositionDeviceData); 
-            console.log('PositionDeviceData', PositionDeviceData);         
+            console.log('PositionDeviceData', PositionDeviceData);
+            toast.success("Đã lấy được lộ trình")
+            setZOOM_LEVEL(9)             
             success = true;   
           } else {
             alert('ReLoad');
@@ -249,8 +251,6 @@ function HistoryDevicesDevice() {
     };
 
     const handleShowRoute = () => { 
-
-
             setisConvertDateTimeInPopup(true)
             const startOfDay = formatDateTime(valueFrom);
             const endOfDay = formatDateTime(valueTo);
@@ -262,64 +262,6 @@ function HistoryDevicesDevice() {
             console.log('endOfDay', endOfDay)  
                    
             if(startOfDay < endOfDay){
-
-              // if( endOfDay < new Date('2024-10-02T23:59:59') || startOfDay > new Date('2024-10-14T13:30:00')    ){  // giữ nguyên không convert khi lọc nhưng convert ở popup
-                
-              //   setisConvertDateTimeInPopup(true)
-
-              //   const filteredLines = selectedLogger.stolenLines.filter(line => {                                     
-              //         const timestamp = new Date(line.timestamp);
-              //         return timestamp >= startOfDay && timestamp <= endOfDay;
-              //   });
-
-              //   if(filteredLines.length === 0){
-              //     toast.error('Không có dữ liệu')
-              //     setListPositionWantToDisplay([])
-              //     setDisplayRoutes(false);    
-              //   }  
-              //   else{
-              //       setBegin(findMinMaxTimestamps(filteredLines).min)
-              //       setEnd(findMinMaxTimestamps(filteredLines).max)
-              //       const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-              //       setListPositionWantToDisplay(newArr);
-              //       setDisplayRoutes(true); 
-              //       setCenter({lat: 10.736910478129415 , lng: 106.66432499334259 })
-              //       setZOOM_LEVEL(9)
-              //   }
-              // }    
-
-              // else{  // convert khi lọc nhưng không convert ở popup
-                
-              //   setisConvertDateTimeInPopup(false)
-                
-              //   const LineAfterConvert = selectedLogger.stolenLines.map(item => {                                     
-              //         const newItem = convertDateTimeToFilter(item);
-              //         return newItem
-              //   });
-
-              //   const filteredLines = LineAfterConvert.filter(line => {                                     
-              //         const   timestamp = new Date(line.timestamp);
-              //         return  timestamp >= startOfDay && timestamp <= endOfDay;
-              //   });
-
-              //   if(filteredLines.length === 0){
-              //     toast.error('Không có dữ liệu')
-              //     setListPositionWantToDisplay([]);
-              //     setDisplayRoutes(false); 
-              //   }  
-              //   else{
-              //       setBegin(findMinMaxTimestamps(filteredLines).min)
-              //       setEnd(findMinMaxTimestamps(filteredLines).max)
-              //       const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-              //       setListPositionWantToDisplay(newArr);
-              //       setDisplayRoutes(true); 
-              //       setCenter({lat:10.80896076479404 , lng: 106.68593859151143 })
-              //       setZOOM_LEVEL(9)
-              //   }
-              // }
-
-
-
             }
             else{
               toast.error('Thời gian không hợp lệ')
@@ -359,11 +301,7 @@ function HistoryDevicesDevice() {
       console.log('lat: '+ e.latlng.lat)
       console.log('lng: '+ e.latlng.lng)
     };
-  
-    // const executeFunctions = async () => {
-    //   await  getLogger();       // Cập nhật lại danh sách Logger
-    //   setAction('Delete')      // Sau đó thực hiện hàm tiếp theo
-    // };
+
 
     const handleDeleteRoutes = async () => {
     if (selectedOption === '') {
@@ -397,8 +335,6 @@ function HistoryDevicesDevice() {
                           toast.success('Xóa thành công!');                                           
                           // executeFunctions();
                          
-                          
-                          
                       } else {
                           toast.error('Có lỗi xảy ra khi xóa!');
                       }
@@ -415,9 +351,6 @@ function HistoryDevicesDevice() {
             else{
               toast.error('Thời gian không hợp lệ')
             }
-      
-           
-
            
         } else {
      
@@ -459,72 +392,67 @@ function HistoryDevicesDevice() {
     <div className='HistoryDevices'> 
       <div className='wrapHistoryDevices'>
             <div className='HistoryDevicesDeviceTitleMobile'>
-                       <div className='HistoryDevicesDeviceTitleItem'>
-                             { `Lộ trình di chuyển thiết bị ${Device.name}` }  
-                        </div> 
+                      <div className='HistoryDevicesDeviceTitleItem'>
+                             { `Lộ trình ${Device.name}` }  
+                      </div> 
             </div> 
-            <div className='filter'>                        
-                   <div className='filterItem filterItemStart'>
-                                   <div>    
+             <div className='filterHistoryDevice'>   
+                        
+                              <div className='divTimeHistoryDevice'>
+                              <div className='filterItemHistoryDevice filterItemStartHistoryDevice'>
+                                  <div>    
                                         Bắt đầu
-                                   </div>
-                                   <div>
+                                  </div>
+                                  <div>
 
                                      <DatePicker
                                        selected={valueFrom}
                                        onChange={onChangeFrom}
                                        showTimeSelect
                                        timeIntervals={1}
-                                       timeFormat="HH:mm:ss"
-                                       dateFormat="dd/MM/yyyy - HH:mm:ss"
-                                       popperPlacement="bottom-start"
-                                   
-                                     />
+                                       timeFormat="HH:mm:ss"     
+                                       dateFormat="dd/MM/yyyy - HH:mm:ss"   
+                                       popperPlacement="bottom-end"  // Hiển thị dưới input (bắt đầu)
+                                       
+                                     />  
+                                  </div>
+                              </div> 
+                                  <div className='filterItemHistoryDevice filterItemEndHistoryDevice'>
+                                      <div>
+                                        Kết thúc
+                                      </div>
+                                      <div>  
+                                      
+                                      <DatePicker
+                                            selected={valueTo}
+                                            onChange={onChangeTo}
+                                            showTimeSelect
+                                            timeIntervals={1}
+                                            timeFormat="HH:mm:ss"
+                                            dateFormat="dd/MM/yyyy - HH:mm:ss"
+                                            popperPlacement="bottom-end"
+                                        />
+                                      </div>
+                                  </div>
+                              </div>                     
+                                                               
+                              <div className='filterItemButtonHistoryDevice'>
+                                <button 
+                                    type="button" 
+                                      class="btn btn-info"
+                                    onClick={handleShowRoute}
+                                
+                                >Xem</button>                                           
+                              </div>                                       
+                        </div>
 
-                                   
-                                   </div>
-                     </div> 
-                     <div className='filterItem filterItemEnd'>
-                                   <div>
-                                     Kết thúc
-                                   </div>
-                                   <div>  
-                                   
-                                   <DatePicker
-                                         selected={valueTo}
-                                         onChange={onChangeTo}
-                                         showTimeSelect
-                                         timeIntervals={1}
-                                         timeFormat="HH:mm:ss"
-                                         dateFormat="dd/MM/yyyy - HH:mm:ss"
-                                         popperPlacement="bottom-start"
-                                     />
-
-
-                                   </div>
-                     </div>
-                     <div className='filterItem filterItemButton'>
-                                   <button 
-                                       type="button" 
-                                       class="btn btn-info"
-                                       onClick={handleShowRoute}
-                                   
-                                   >Xem</button>
-                                   <button 
-                                       type="button" 
-                                       class="btn btn-danger"
-                                       onClick={handleDeleteRoutes}
-                                   >Xóa</button>
-                     </div>
-
-                  </div>
                   <div className='mapStolenLine'> 
                     <div className='HistoryDevicesDeviceTitle'>
                        <div className='HistoryDevicesDeviceTitleItem'>
                               { `Lộ trình di chuyển thiết bị ${Device.name}` }     
                         </div> 
                     </div>          
-              <MapContainer 
+                    <MapContainer 
                           center={center} 
                           zoom={ZOOM_LEVEL}     
                           ref={mapRef}>

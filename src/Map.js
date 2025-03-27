@@ -26,10 +26,10 @@ function Map() {
           pressPercentBattery, setgetLoggerStolen, displayNav, setDisplayNav, displayRoutesTwoPoint, setDisplayRoutesTwoPoint,
           isButtonDisabled, setIsButtonDisabled , accessRouteRegister, listAllDevices,setlistAllDevices,
           inforCustomer, setInforCustomer, phoneNumberCustomer, setPhoneNumberCustomer, listObject, setlistObject    
-        } =  useContext(UserContext);      
+        } =  useContext(UserContext);           
   const locationUser = useGeoLocation()  // lấy vị trí của người thay pin
   const [showModalChangeName, setshowModalChangeName] = useState(false); // hiển thị bảng đổi tên
-  const [ZOOM_LEVEL, setZOOM_LEVEL] = useState(9) // độ zoom map
+  const [ZOOM_LEVEL, setZOOM_LEVEL] = useState(5) // độ zoom map
   const [listAllLogger, setListAllLogger]= useState([]) // danh sách tất cả logger
   const mapRef = useRef()  
   const [positionUser, setpositionUser] = useState({ latitude: "", longtitude: "" }); //vị trí của người thay pin    
@@ -39,7 +39,8 @@ function Map() {
   const [dataLoggerEdit,setdataLoggerEdit] = useState({}) // chọn dataLogger cần sửa tên
   const [isDisplayPosition, setIsDisplayPosition] = useState(false);  // hiển thị tủ điện
   const [PositionCabinet, setPositionCabinet] = useState({});  // hiển thị tủ điện
-  
+  const [isMapLoading, setIsMapLoading] = useState(true);
+  const [isLoadingAPIDevices, setLoadingAPIDevices] = useState(false);
   // const url = 'https://sawacoapi.azurewebsites.net'   
   
   const wakeup = new L.Icon({ // marker bình thường
@@ -101,6 +102,7 @@ function Map() {
 
   const getAllDevices = async () => {   
     let success = false;
+    
     while (!success) {
       try {
         const response = await axios.get(`${url}/GPSDevice/GetAllGPSDevices`);  
@@ -111,19 +113,23 @@ function Map() {
           const phoneNumer = sessionStorage.getItem('phoneNumer');
           const listDevice = DevicesData.filter((item) => item.customerPhoneNumber === phoneNumer);
           const listDeviceStolen = listDevice.filter((item) => item.stolen === true);
-   
+          console.log(listDevice)  
 
-          setlistDevicesStolen(listDeviceStolen)
+          setlistDevicesStolen(listDeviceStolen)  
 
           setlistAllDevices(listDevice);        
           success = true; 
-        } else {
+        } else {   
         }
       } catch (error) {
         console.error('getAllDevices error, retrying...', error);  
         await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
       }
-    }
+    }                
+                                         
+    setLoadingAPIDevices(true)                                                                                      
+
+
   };
 
 
@@ -135,7 +141,7 @@ function Map() {
         const CustomerData = response.data;  
         // Kiểm tra nếu dữ liệu nhận được hợp lệ
         if (CustomerData && CustomerData.length > 0) {
-          console.log(CustomerData)
+          //console.log(CustomerData)
           const phoneNumer = sessionStorage.getItem('phoneNumer');  
           const Customer = CustomerData.find((item) => item.phoneNumber === phoneNumer);
           setInforCustomer(Customer);       
@@ -155,7 +161,7 @@ function Map() {
       try {
         const response = await axios.get(`${url}/GPSObject/GetObjectByPhoneNumber?phoneNumber=${phoneNumberCustomer}`);    
         const ObjectsData = response.data; 
-        console.log(ObjectsData)   
+        //console.log(ObjectsData)   
         // Kiểm tra nếu dữ liệu nhận được hợp lệ
         if (ObjectsData && ObjectsData.length > 0) {      
           const Objects = ObjectsData.filter((item) => item.connected === true);
@@ -231,35 +237,51 @@ useEffect(()=>{
     }           
 }
 },[pressPercentBattery])
+
+
+// useEffect(()=>{
+//   if( isLoadingAPIDevices) { 
+    
+//     if(listAllDevices.length > 0){
+//       setIsMapLoading(false);  
+//     }
+          
+//   }
+// },[isLoadingAPIDevices])  
+
+
+
+
    
  
 
-// useEffect( () => {
-//   let connection = new signalR.HubConnectionBuilder()   
-//       .withUrl("https://sawacoapi.azurewebsites.net/NotificationHub")   
-//       .withAutomaticReconnect()    
-//       .build();     
-//   // Bắt đầu kết nối   
-//   connection.start()   
-//       .then(() => {  
-//           console.log('Kết nối thành công!');
-//       })
-//       .catch(err => {
-//           console.error('Kết nối thất bại: ', err);
-//       });
-//   // Lắng nghe sự kiện kết nối lại
-//   connection.onreconnected(connectionId => {
-//       console.log(`Kết nối lại thành công. Connection ID: ${connectionId}`);
-//   });
-//   // Lắng nghe sự kiện đang kết nối lại
-//   connection.onreconnecting(error => {
-//       console.warn('Kết nối đang được thử lại...', error);
-//   });
-//   connection.on("GetAll", data => {   
-//         const obj = JSON.parse(data);
-//         // getLogger()                 
-//   });                      
-// }, [] )
+useEffect( () => {
+  let connection = new signalR.HubConnectionBuilder()   
+      .withUrl("https://mygps.runasp.net/NotificationHub")   
+      .withAutomaticReconnect()    
+      .build();     
+  // Bắt đầu kết nối   
+  connection.start()   
+      .then(() => {  
+          console.log('Kết nối thành công!');
+      })
+      .catch(err => {
+          console.error('Kết nối thất bại: ', err);
+      });
+  // Lắng nghe sự kiện kết nối lại
+  connection.onreconnected(connectionId => {
+      console.log(`Kết nối lại thành công. Connection ID: ${connectionId}`);
+  });
+  // Lắng nghe sự kiện đang kết nối lại
+  connection.onreconnecting(error => {
+      console.warn('Kết nối đang được thử lại...', error);
+  });
+  connection.on("SendNotificationG001", data => {   
+        const obj = JSON.parse(data);
+        console.log(obj)  
+        // getLogger()                 
+  });                      
+}, [] )
                                                        
 const handleMapClickGetLocation = (e) => {  // lấy tọa độ khi Click vô Map
   console.log('lat: '+ e.latlng.lat)
@@ -445,10 +467,35 @@ function convertDateTime(inputString) {
   }, [isDisplayMakerOpenPopup, pressPositionWarning]); 
   
   
-
+   
 
 
   const [deviceAddresses, setDeviceAddresses] = useState({});
+  const [isHaveDeviceAddresses, setIsHaveDeviceAddresses] = useState(false);
+
+
+  useEffect(() => {
+
+    if(isLoadingAPIDevices){
+      if(listAllDevices.length === 0){
+        setIsMapLoading(false);
+        return;
+
+      }
+    }
+
+    if(listAllDevices.length > 0){
+        const firstDeviceId = listAllDevices[0].id; // Lấy id của thiết bị đầu tiên
+        if (deviceAddresses[firstDeviceId] !== undefined) {      
+            setIsHaveDeviceAddresses(true);
+            setIsMapLoading(false);
+        }
+    }                
+                   
+  },[deviceAddresses, isLoadingAPIDevices, listAllDevices])                     
+   
+                                                                                                                                             
+   
   useEffect(() => {
 
     if(listAllDevices.length > 0){
@@ -487,7 +534,24 @@ function convertDateTime(inputString) {
   };
 
 
-  return (
+  function cleanAddress(address) {
+    // Tách chuỗi bằng dấu phẩy
+    let parts = address.split(",");
+
+    // Loại bỏ khoảng trắng thừa ở mỗi phần
+    parts = parts.map(part => part.trim());
+
+    // Loại bỏ phần có mã bưu chính (nếu có)
+    parts = parts.filter(part => !/^\d{5,6}$/.test(part));
+
+    // Ghép lại chuỗi sau khi lọc
+    return parts.join(", ");
+}
+
+
+//console.log('deviceAddresses', deviceAddresses)
+
+  return (   
     <>
  <div className='Map'>
                   <div className='divMap'>  
@@ -496,10 +560,37 @@ function convertDateTime(inputString) {
                               Bản đồ tổng quan      
                         </div> 
                     </div>  
-                    <MapContainer 
+
+                   { isMapLoading ? ( 
+                    <div className="loadingContainer">
+                            <div className="spinner"></div> {/* Hiển thị hiệu ứng loading */}
+                            <p>Đang tải...</p>
+                    </div>
+                    ) : (
+
+                <MapContainer 
                           center={center} 
                           zoom={ZOOM_LEVEL}     
                           ref={mapRef}>
+
+                         {/* Div hiển thị trên bản đồ */}
+                          <div 
+                            style={{
+                            position: "absolute",
+                            top: "10px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            background: "rgba(255, 255, 255, 0.9)",
+                            padding: "10px 20px",
+                            borderRadius: "8px",
+                            boxShadow: "0 2px 5px rgba(0, 0, 0, 0.3)",
+                            zIndex: 1000,
+                            fontWeight: "bold",
+                            fontSize:"20px"
+                          }}>
+                            {`Số thiết bị: ${listAllDevices.length}`}  
+                          </div>
+
                         <TileLayer
                              attribution ='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"                            
@@ -713,8 +804,8 @@ function convertDateTime(inputString) {
                                                 <div className='title'>Vị trí hiện tại:</div>
                                                 <div className='value'>
                                                   <div className='value'>
-                                                        <div className="value">{deviceAddresses[item.id] ?? "Đang tải..."}</div>
-                                                  </div>   
+                                                        <div className="value">{isHaveDeviceAddresses ? cleanAddress(deviceAddresses[item.id]) : "Đang tải..."}</div>
+                                                  </div>     
                                                 </div>
                                             </div> 
 
@@ -733,11 +824,6 @@ function convertDateTime(inputString) {
                                 </Marker> 
                                  
                                 )) : ''}
-
-
-
-
-
 
                                 { listDevicesStolen.length > 0 ? listDevicesStolen.map((item , index)=> (
                                     
@@ -771,9 +857,9 @@ function convertDateTime(inputString) {
                                            <div className ='inforItem'>
                                                <div className='title'>Vị trí hiện tại:</div>
                                                <div className='value'>
-                                                 <div className='value'>
-                                                       <div className="value">{deviceAddresses[item.id] ?? "Đang tải..."}</div>
-                                                 </div>   
+                                                 <div className='value'>   
+                                                       <div className="value">{isHaveDeviceAddresses ? cleanAddress(deviceAddresses[item.id]) : "Đang tải..."}</div>
+                                                 </div>      
                                                </div>
                                            </div> 
 
@@ -797,6 +883,11 @@ function convertDateTime(inputString) {
                                   
                                                                                   
                     </MapContainer>
+
+              )}
+
+
+                    
                   </div>
                  
                   <ToastContainer

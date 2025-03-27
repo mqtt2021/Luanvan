@@ -18,7 +18,7 @@ import { RiChatHistoryFill } from "react-icons/ri";
 import {Link, useNavigate} from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { url } from './services/UserService';
-
+import * as signalR from "@microsoft/signalr";
 function PositionDevice() {          
     const { id} = useParams(); // Lấy tham số động từ URL
 
@@ -94,63 +94,39 @@ function PositionDevice() {
 
     const currentRoutingRef = useRef(null);
     
-    const handleDisplayRoute = (list) => {  // hiển thị đường đi của GPS Tracker
-          const lineStolen = list.map((item) => L.latLng(item.latitude, item.longtitude));
+    // const handleDisplayRoute = (list) => {  // hiển thị đường đi của GPS Tracker
+    //       const lineStolen = list.map((item) => L.latLng(item.latitude, item.longtitude));
   
-          currentRoutingRef.current = L.Routing.control({
-          waypoints: [
-          // L.latLng(ListPositionSafety[0].lat, ListPositionSafety[0].lng),        
-              ...lineStolen
-          ],
-          lineOptions: {
-            styles: [
-              {
-                color: "blue",
-                opacity: 1,
-                weight: 8
-              }
-            ]
-          },  
-          routeWhileDragging: true,   
-          addWaypoints: false, 
-          draggableWaypoints: false,
-          fitSelectedRoutes: false,
-          showAlternatives: false,
-          show: false,
-          createMarker: function() { return null; }        
-          });
-          currentRoutingRef.current.addTo(mapRef.current);
-    }
+    //       currentRoutingRef.current = L.Routing.control({
+    //       waypoints: [
+    //       // L.latLng(ListPositionSafety[0].lat, ListPositionSafety[0].lng),        
+    //           ...lineStolen
+    //       ],
+    //       lineOptions: {   
+    //         styles: [
+    //           {
+    //             color: "blue",
+    //             opacity: 1,
+    //             weight: 8
+    //           }
+    //         ]
+    //       },  
+    //       routeWhileDragging: true,   
+    //       addWaypoints: false, 
+    //       draggableWaypoints: false,
+    //       fitSelectedRoutes: false,
+    //       showAlternatives: false,
+    //       show: false,
+    //       createMarker: function() { return null; }        
+    //       });
+    //       currentRoutingRef.current.addTo(mapRef.current);
+    // }
 
-    const RemoveRoute = () => {   // remove đường đi GPS Tracker
-      if (currentRoutingRef.current) {
-          currentRoutingRef.current.remove();
-          currentRoutingRef.current = null;
-      }
-    };
+   
 
-    const calculateDistance = (point1, point2) => {
-      const latLng1 = L.latLng(point1.latitude, point1.longtitude);
-      const latLng2 = L.latLng(point2.latitude, point2.longtitude);
-      const distance = latLng1.distanceTo(latLng2);     
-      return distance;
-    };
+    
 
-    // const handleChange = (event) => { // Chọn Logger để xem lịch sử
-    //     const PositionDeviceStolen = listLoggerStolenPositionDevice.find((item,index) => item.id === event.target.value )
-    //     setSelecteLogger(PositionDeviceStolen)
-    //     setSelectedOption(event.target.value);
-    // };
-
-    // useEffect(() => {
-    //      if(action === 'Delete'){
-    //           const PositionDeviceStolen = listLoggerStolenPositionDevice.find((item,index) => item.id === selectedLogger.id )
-    //           setSelecteLogger(PositionDeviceStolen)
-    //      }
-    //      if(action === 'See'){
-
-    //      }
-    // },[action,listLoggerStolenPositionDevice])
+   
 
     useEffect(() => {
          if(action === 'Delete'){
@@ -206,209 +182,46 @@ function PositionDevice() {
     
       return { min: minObj, max: maxObj };
     }
-   
-
-
-    const handleShowRoute = () => { 
-        if(selectedOption === ''){
-                    toast.error('Bạn chưa chọn trạm cần xem')
-        }
-        else{
-            const startOfDay = new Date(valueFrom);                      
-            const endOfDay = new Date(valueTo);
-
-            if(startOfDay < endOfDay){
-              if( endOfDay < new Date('2024-10-02T23:59:59') || startOfDay > new Date('2024-10-14T13:30:00')    ){  // giữ nguyên không convert khi lọc nhưng convert ở popup
-                
-                setisConvertDateTimeInPopup(true)
-
-                const filteredLines = selectedLogger.stolenLines.filter(line => {                                     
-                      const timestamp = new Date(line.timestamp);
-                      return timestamp >= startOfDay && timestamp <= endOfDay;
-                });
-
-                if(filteredLines.length === 0){
-                  toast.error('Không có dữ liệu')
-                  setListPositionWantToDisplay([])
-                  setDisplayRoutes(false);    
-                }  
-                else{
-                    setBegin(findMinMaxTimestamps(filteredLines).min)
-                    setEnd(findMinMaxTimestamps(filteredLines).max)
-                    const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-                    setListPositionWantToDisplay(newArr);
-                    setDisplayRoutes(true); 
-                    setCenter({lat: 10.736910478129415 , lng: 106.66432499334259 })
-                    setZOOM_LEVEL(9)
-                }
-              }    
-
-              else{  // convert khi lọc nhưng không convert ở popup
-                
-                setisConvertDateTimeInPopup(false)
-                
-                const LineAfterConvert = selectedLogger.stolenLines.map(item => {                                     
-                      const newItem = convertDateTimeToFilter(item);
-                      return newItem
-                });
-
-                const filteredLines = LineAfterConvert.filter(line => {                                     
-                      const   timestamp = new Date(line.timestamp);
-                      return  timestamp >= startOfDay && timestamp <= endOfDay;
-                });
-
-                if(filteredLines.length === 0){
-                  toast.error('Không có dữ liệu')
-                  setListPositionWantToDisplay([]);
-                  setDisplayRoutes(false); 
-                }  
-                else{
-                    setBegin(findMinMaxTimestamps(filteredLines).min)
-                    setEnd(findMinMaxTimestamps(filteredLines).max)
-                    const newArr = filteredLines.filter(item => item !== findMinMaxTimestamps(filteredLines).min && item !== findMinMaxTimestamps(filteredLines).max);
-                    setListPositionWantToDisplay(newArr);
-                    setDisplayRoutes(true); 
-                    setCenter({lat:10.80896076479404 , lng: 106.68593859151143 })
-                    setZOOM_LEVEL(9)
-                }
-              }
-            }
-            else{
-              toast.error('Thời gian không hợp lệ')
-            }                    
-        }
-    }
-
-      const handleShowRouteAfterDelete = () => { 
-      if(selectedOption === ''){
-        toast.error('Bạn chưa chọn trạm cần xem')
-      }
-      else{
-          const startOfDay = new Date(valueFrom);         
-          const endOfDay = new Date(valueTo);
-          const filteredLines = selectedLogger.stolenLines.filter(line => {
-                  const timestampformat = changeDateToFixed(line.timestamp) 
-                  const timestamp = new Date(timestampformat);
-                  return timestamp >= startOfDay && timestamp <= endOfDay;
-          });
-
-          if(filteredLines.length === 0){
-              window.alert('Không có dữ liệu handleShowRouteAfterDelete')
-          }  
-          else{
-              setBegin( filteredLines[0] )
-              setEnd(filteredLines[filteredLines.length-1] )
-              const newArr = filteredLines.slice(1, -1);
-              setListPositionWantToDisplay(newArr);
-              setDisplayRoutes(true); 
-              setCenter({lat:filteredLines[0].latitude , lng: filteredLines[0].longtitude })
-              setZOOM_LEVEL(18)
-          }   
-      }
-  }
 
     const handleMapClickGetLocation = (e) => {  // lấy tọa độ khi Click vô Map
       console.log('lat: '+ e.latlng.lat)
       console.log('lng: '+ e.latlng.lng)
     };
 
-    // const executeFunctions = async () => {
-    //   await  getLogger();       // Cập nhật lại danh sách Logger
-    //   setAction('Delete')      // Sau đó thực hiện hàm tiếp theo
-    // };  
+    useEffect( () => {
+      let connection = new signalR.HubConnectionBuilder()   
+          .withUrl("https://mygps.runasp.net/NotificationHub")   
+          .withAutomaticReconnect()    
+          .build();     
+      // Bắt đầu kết nối   
+      connection.start()   
+          .then(() => {  
+            console.log("✅ Kết nối SignalR thành công!");     
+                       // Lắng nghe các sự kiện cho từng thiết bị
+          })
+          .catch(err => {
+              console.error('Kết nối thất bại: ', err);
+          });
+      // Lắng nghe sự kiện kết nối lại
+      connection.onreconnected(connectionId => {
+          console.log(`Kết nối lại thành công. Connection ID: ${connectionId}`);
+      });
+      // Lắng nghe sự kiện đang kết nối lại
+      connection.onreconnecting(error => {
+          console.warn('Kết nối đang được thử lại...', error);
+      });
+      connection.on(`SendNotification${Device.id}`, data => {
+        const obj = JSON.parse(data);
+        console.log(`📡 Dữ liệu từ thiết bị ${Device.id}:`, obj);
+         // Đợi 2 giây trước khi gọi getNotification
+        setTimeout(() => {
+          getDeviceById();  
+        }, 5000);                   
+      });               
+    }, [] )
 
-    const handleDeleteRoutes = async () => {
-    if (selectedOption === '') {
-      toast.error('Bạn chưa chọn trạm cần xóa')
-    } else {
-      
-        // Hiển thị cửa sổ xác nhận
-        const confirmDelete = window.confirm('Bạn có chắc chắn muốn xóa các dữ liệu này không?');
-
-        if (confirmDelete) {
-
-            const startOfDay = new Date(valueFrom);
-            const endOfDay = new Date(valueTo);
-            if(startOfDay < endOfDay){
-
-                const filteredLines = selectedLogger.stolenLines.filter(line => {
-                const timestamp = new Date(line.timestamp);
-                return timestamp >= startOfDay && timestamp <= endOfDay;
-                }); 
-
-                if(filteredLines.length > 0){
-                  const startDate = formatDateTime(valueFrom);
-                  const endDate = formatDateTime(valueTo);
-                  const loggerId = selectedLogger.id;                             
-                  try {
-                      // Gọi API để xóa các phần tử trong stolenLine theo ngày
-                      const response = await axios.delete(`${url}/StolenLine/DeleteStolenLineByDate/LoggerId=${loggerId}?startDate=${startDate}&endDate=${endDate}`);
-                      
-                      if (response.status === 200) {
-                         
-                          toast.success('Xóa thành công!');                                           
-                          // executeFunctions();
-                         
-                          
-                          
-                      } else {
-                          toast.error('Có lỗi xảy ra khi xóa!');
-                      }
-                  } catch (error) {
-                      console.error('Lỗi khi gọi API xóa:', error);
-                      toast.error('Có lỗi xảy ra khi xóa!');
-                  }
-    
-                }
-                else{
-                      toast.error('Không có dữ liệu');
-                }
-            }
-            else{
-              toast.error('Thời gian không hợp lệ')
-            }
-      
-           
-
-           
-        } else {
-     
-        }
-    }
-    }
-
-    function convertDateTimeBefore(inputString) {
-      const [date, time] = inputString.split('T');    
-      const [year, month, day] = date.split('-');
-      return `${day}-${month}-${year} ${time}`;
-    }
-    
-    function convertDateTimeAfter(inputString) {
-      const [date, time] = inputString.split(' ');    
-      const [year, month, day] = date.split('-');
-      return `${day}-${month}-${year} ${time}`;
-    }
-
-    function convertDateTimeToFilter(ObjectItem) {
-      const [date, time] = ObjectItem.timestamp.split('T');    
-      const [year, day, month] = date.split('-');    
-      return {...ObjectItem, timestamp : `${year}-${month}-${day} ${time}` };
-    }
    
 
-  const formatDateTime = (date) => {
-    if (!date) return "No date selected";
-    const hours = date.getHours().toString().padStart(2, '0');
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    const seconds = date.getSeconds().toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
-  };
-
-  console.log('idDevice', id)  
-  console.log(Device)
   return (   
     <div className='PositionDevice'> 
       <div className='wrapPositionDevice'>
@@ -436,9 +249,11 @@ function PositionDevice() {
                             borderRadius: "8px",
                             boxShadow: "0 2px 5px rgba(0, 0, 0, 0.3)",
                             zIndex: 1000,
-                            fontWeight: "bold"
+                            fontWeight: "bold",
+                             width: "75%",  // Tự mở rộng theo nội dung
+                            textAlign: "center"
                           }}>
-                            {`Vị trí: ${address}`}
+                            {Device.latitude > 0 ? `Vị trí: ${address}` : `Chưa ghi nhận vị trí`}
                           </div>
 
                         <TileLayer
@@ -470,13 +285,13 @@ function PositionDevice() {
                                       zIndexOffset={ 1000 } 
                                                                   
                                   >
-                                    <Popup>   
+                                    {/* <Popup>   
                                         <div className='div-popup'>
-                                        {/* <div>{ isConvertDateTimeInPopup ? convertDateTimeBefore(begin.timestamp) : convertDateTimeAfter(begin.timestamp)}</div>                                                                 */}
+                                        <div>{ isConvertDateTimeInPopup ? convertDateTimeBefore(begin.timestamp) : convertDateTimeAfter(begin.timestamp)}</div>                                                                
                                         
                                         
                                         </div>                                                                             
-                                    </Popup>    
+                                    </Popup>     */}
                                 </Marker>
                                
                                 {/* {displayRoutes && 
@@ -508,7 +323,7 @@ function PositionDevice() {
                                           <RiChatHistoryFill className='itemDeviceSecondItemIcon'/>
                                       </div>
                                       <div>
-                                          Lộ trình di chuyển    
+                                          Lộ trình    
                                       </div>
                                     </div>
                                     </Link>
@@ -520,7 +335,7 @@ function PositionDevice() {
                                           <IoMdSettings className='itemDeviceSecondItemIcon'/>
                                       </div>
                                       <div>  
-                                          Thiết lập thiết bị  
+                                          Thiết lập  
                                       </div>
                                     </div>
                                   </Link>  

@@ -9,6 +9,7 @@
     background-color: #6abce2 ; 
     .Menu{
         display: none;
+       
     }
    
     .logoHCMUT{
@@ -169,7 +170,8 @@
     .Menu{
         padding-left: 2%;
         background-color: rgb(9, 132, 227);  
-        width: 10%;  
+        
+        width: 22%;  
         display: block;
         display: flex;
         align-items: center;               
@@ -189,6 +191,20 @@
           justify-content: center;
           align-items: center;
           border-radius: 50%;
+        }
+
+        .notificationBadgeMenu{
+          font-size: 10px;
+          color: black;
+          background-color: rgb(255, 0, 0);
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          display: flex;
+          justify-content: center;             
+          align-items: center;
+          font-size: 18px;
+
         }
     }  
   
@@ -224,6 +240,21 @@
                display: flex;
                align-items: center;
               }
+
+              .notificationBadgeMobile{
+                font-size: 10px;
+                color: black;
+                background-color: rgb(255, 0, 0);
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                justify-content: center;             
+                align-items: center;
+                font-size: 18px;
+
+              }
+
             }
           }
           .NavigationItemActive{

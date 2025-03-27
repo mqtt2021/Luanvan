@@ -1,32 +1,23 @@
 import React, { useEffect, useState, useRef,useContext } from 'react'
-import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'react-datetime-picker/dist/DateTimePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css'; 
 import axios from 'axios';
 import './SafeArea.scss'
-import { MapContainer, TileLayer,Marker, Popup,useMapEvent,useMap, FeatureGroup , Circle    } from "react-leaflet";
+import { MapContainer, TileLayer,Marker,useMapEvent , Circle    } from "react-leaflet";
 import L from 'leaflet'
-import { useMapContext } from './usercontext';
 import { ToastContainer } from 'react-toastify';
 import {  toast } from 'react-toastify';
-import { UserContext } from './usercontext'; 
-import { GiPositionMarker } from "react-icons/gi"; 
-import { IoMdSettings } from "react-icons/io";
-import { RiChatHistoryFill } from "react-icons/ri";
-import {Link, useNavigate} from "react-router-dom";  
+import { UserContext } from './usercontext';  
 import { useParams } from "react-router-dom";
-import { url } from './services/UserService';  
-import { EditControl } from "react-leaflet-draw";   
+import { url } from './services/UserService';    
 import "leaflet/dist/leaflet.css";
 import "leaflet-draw/dist/leaflet.draw.css";
 
 
 function SafeArea() {              
    
-    const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext); 
-
     const PositionSafe = new L.Icon({ // vị trí GPS khi bị trộm đi qua
         iconUrl: require("./asset/images/maker_user.png" ),
         iconSize: [50,50],
@@ -42,6 +33,33 @@ function SafeArea() {
     const mapRef = useRef()
     const {id} = useParams(); // Lấy tham số động từ URL
     
+    const [Device, setDevice] = useState({id:'', latitude: 0 , longitude: 0 });
+
+
+
+    const getDeviceById = async (id) => { 
+      let success = false;
+      while (!success) {   
+        try {
+          const response = await axios.get(`${url}/GPSDevice/GetGPSDeviceById?Id=${id}`);         
+          const DeviceData = response.data;
+    
+          // Kiểm tra nếu dữ liệu nhận được hợp lệ
+          if (DeviceData) {    
+            // const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
+            setDevice(DeviceData); 
+            //console.log(DeviceData)       
+            success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
+          } else {
+            alert('ReLoad');
+          }
+        } catch (error) {
+          console.error('getDeviceById error, retrying...', error);  
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+        }
+      }
+    };
+    
     
     const getObjectById = async () => {
       let success = false;
@@ -53,6 +71,11 @@ function SafeArea() {
           // Kiểm tra nếu dữ liệu nhận được hợp lệ
           if (ObjectData) {    
             // const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
+            
+            if(ObjectData.connected){
+                await getDeviceById(ObjectData.gpsDeviceId)
+            }
+            
             setObject(ObjectData);     
             success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
           } else {
@@ -66,6 +89,35 @@ function SafeArea() {
     };
 
 
+    // const getDeviceById = async () => { 
+      
+    //   setIsLoading(true); // Bắt đầu loading
+    //   let success = false;
+
+    //   while (!success) {   
+    //     try {
+    //       const response = await axios.get(`${url}/GPSDevice/GetGPSDeviceById?Id=${idDevice}`);         
+    //       const DeviceData = response.data;
+    
+    //       // Kiểm tra nếu dữ liệu nhận được hợp lệ
+    //       if (DeviceData) {    
+    //         // const ListStolen = LoggerData.filter((item) => item.stolenLines.length > 0);
+    //         setDevice(DeviceData); 
+    //         console.log(DeviceData)       
+    //         success = true; // Dừng vòng lặp khi dữ liệu hợp lệ và được xử lý
+    //       } else {
+    //         alert('ReLoad');
+    //       }
+    //     } catch (error) {
+    //       console.error('getDeviceById error, retrying...', error);  
+    //       await new Promise(resolve => setTimeout(resolve, 1000)); // Đợi 2 giây trước khi thử lại
+    //     }
+    //   }
+
+     
+    // };
+
+
     const callAPIUpdateObjectById = async () => {
       let success = false;
       while (!success) {   
@@ -77,10 +129,10 @@ function SafeArea() {
               "Latitude": ObjectClick.latitude,
               "SafeRadius": radius,
               "CurrentTime": "0001-01-01T00:00:00",
-              "AlarmTime": "0001-01-01T00:00:00",
-              "BlueTooth": "OFF",
-              "Emergency": true,
-              "PhoneNumber": "0888927971"
+              "AlarmTime": Device.alarmTime,  
+              "BlueTooth": Device.bluetooth,    
+              "Emergency": Device.emergency,
+              "PhoneNumber": Device.customerPhoneNumber 
             }
           );  
           const ObjectData = response.data;
@@ -132,7 +184,7 @@ function SafeArea() {
     const handleMapClickGetLocation = (e) => {  // lấy tọa độ khi Click vô Map
 
       setObjectClick({  latitude: e.latlng.lat , longitude: e.latlng.lng  })
-
+      
 
       const { lat, lng } = e.latlng;
       // setLatLng({ lat, lng });
@@ -169,8 +221,9 @@ function SafeArea() {
 
     }
 
-  console.log('idObject', id)  
-  console.log(Object)
+  
+  console.log(Object)  
+  console.log(Device)
   
   return (   
     <div className='SafeArea'>
@@ -195,7 +248,7 @@ function SafeArea() {
                              attribution ='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"                           
                         />
-                        <MyClickHandlerGetLocation onClick={handleMapClickGetLocation}/>
+                        <MyClickHandlerGetLocation onClick={handleMapClickGetLocation}/>             
 
                         {isDisplayCircle &&                         
                         <Circle
@@ -211,23 +264,11 @@ function SafeArea() {
                                     icon= { PositionSafe } 
                                     zIndexOffset={ 1000 }   
                             >
-                              {/* <Popup>
-                                Tọa độ: {latLng.lat.toFixed(4)}, {latLng.lng.toFixed(4)}
-                              </Popup> */}
+                             
                             </Marker>
                         )}
                              
-                        {/* <FeatureGroup>
-                          <EditControl
-                            position="topright"
-                            onCreated={_created}
-                            draw={
-                              {
-                                
-                              }
-                            }
-                          />
-                        </FeatureGroup> */}                                                                                                                
+                                                                                                                                       
                   </MapContainer>
       </div>
       <div className='filter'>        

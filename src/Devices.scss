@@ -63,7 +63,8 @@
             height: 60px;  
             align-items: center;  
         .divInputFindDevices{  
-                width: 90%;       
+                width: 90%;  
+                
         }
         .divAddDevices{
                 width: 6%; 
@@ -77,18 +78,19 @@
                     }
                 }
                 @media (max-width: 768px) {
-                    width: 30%;  
+                    width: 15%;  
                     display: flex;
                     justify-content: center;  
+                    
             
                 }      
         }
 
         @media (max-width: 768px) {
             width: 100%;
-            justify-content: space-between;     
+            justify-content: space-between;
+             
             
-    
         }
 
     }
@@ -115,19 +117,22 @@
             .itemDevice{
                 display: flex;
                 height: 100%;
-                
-                
             }
             .itemDeviceFirst{
-                    width: 30%;
+                    width: 40%;
                     .divIconDevice{
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        width: 30%;
+                        width: 30%;  
+                        
                         .iconDevice{
                             font-size: 50px;
                             color: rgb(252, 0, 0);
+                        }
+
+                        @media (max-width: 768px) { 
+                            width: 18%;
                         }
                     }
                     .divIconNameAndPin{
@@ -138,7 +143,12 @@
                         .name{
                             font-size: 20px;
                             font-weight: 700;    
-                            font-family: inherit;         
+                            font-family: inherit;  
+                            @media (max-width: 768px) {                             
+                                font-size: 18px;
+                                font-weight: 500;
+                                
+                            }       
                         }
                         .divIconPin{
                             display: flex;
@@ -148,14 +158,13 @@
                                 color: rgb(9, 144, 255);
                             }  
                         }
-                       
                     }
 
                     @media (max-width: 768px) {                             
-                        width: 40%;
-                       
-                        padding-left: 4%;
-                
+                        width: 100%;
+                        padding-left: 0%;
+                        height: 50%; 
+                        
                     }
             }
 
@@ -163,6 +172,7 @@
                 width: 50%;
                 justify-content: space-around;
                 align-items: center;
+
                 a{
                     text-decoration: none;   
                     width: 30%;
@@ -190,43 +200,49 @@
 
 
                 @media (max-width: 768px) {
-                    width: 65%;
-                    justify-content: space-between;
-
+                    width: 100%;
+                    display: flex;
+                    justify-content: space-around;          
+                    height: 50%;
                     a{
                         text-decoration: none;   
                         width: 40%;
                         color: black;
                         .itemDeviceSecondItem{  
-                        display: flex;
-                        align-items: center;
-                        justify-content: space-around;
-                        background-color: aliceblue;
-                        border: 1px solid rgb(0, 0, 0);
-                        border-radius: 10px;
-                        width: 100%;
-                        height: 50px;
-                        &:hover{     
-                            cursor: pointer;
-                            background-color: #e1e1e1;
-    
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-around;
+                            background-color: aliceblue;
+                            border: 1px solid rgb(0, 0, 0);
+                            border-radius: 10px;
+                            width: 100%;
+                            height: 50px;
+                            &:hover{     
+                                cursor: pointer;
+                                background-color: #e1e1e1;
+                            
+                            }
+                            .itemDeviceSecondItemIcon{
+                                font-size: 25px;
+                                color: red;
+                            }
                         }
-                        .itemDeviceSecondItemIcon{
-                            font-size: 25px;
-                            color: red;
-                        }
-                    }
                     }
             
                 }
 
                 
             }
+
+            @media (max-width: 768px) {                             
+                display: block;
+                height: 130px;
+            }
         }
 
 
         @media (max-width: 768px) {
-            width: 100%;
+           width: 100%;
            
         }
         

@@ -8,9 +8,10 @@ import { UserContext } from './usercontext';
 import { use } from 'react';
 import { useNavigate, useLocation  } from 'react-router-dom';
 import Register from './Register';
+import OTP from './OTP'
 function App() {   
 
-  const { user , loginContext, token, setToken, loginTotalLogin, logoutTotalLogin, LoginTotal, accessRouteRegister, setaccessRouteRegister } = useContext(UserContext);
+  const { user , loginContext, token, setToken, loginTotalLogin, logoutTotalLogin, LoginTotal, accessRouteRegister, setaccessRouteRegister, accessRouteOTP, setaccessRouteOTP } = useContext(UserContext);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,30 +21,46 @@ function App() {
     const emailSessionStorage = sessionStorage.getItem('email');
     const tokenSessionStorage = sessionStorage.getItem('token');
     const accessRegister = sessionStorage.getItem('accessRegister');
-    setaccessRouteRegister(accessRegister)   
-    if(emailSessionStorage) {
-      loginContext(emailSessionStorage,tokenSessionStorage)
-      setToken(tokenSessionStorage)
+
+    setaccessRouteRegister(accessRegister)             
+
+    if(emailSessionStorage) {        
+        loginContext(emailSessionStorage, tokenSessionStorage)  
+        setToken(tokenSessionStorage) 
     }
 
-    if(location.pathname === '/'){
-      setaccessRouteRegister(false)
-    }
+    if(location.pathname === '/'){      
+        setaccessRouteRegister(false) 
+        setaccessRouteOTP(false)  
 
+    }   
+
+    // if(location.pathname === '/otp'){      
+    //     setaccessRouteRegister(false)         
+    // }
 
   },[location]) 
 
-  console.log('App',accessRouteRegister)  
+
+
+  console.log('App accessRouteRegister',accessRouteRegister)  
+  console.log('App accessRouteOTP',accessRouteOTP)  
   
   return (
    
       <div className='Container'>
             <div className="App-container">
-                  {user && user.auth ? <Header/> : ''}
-                  {user && user.auth ? <AppRoutes /> : ''}
-                  {(user && user.auth) || accessRouteRegister ? '' : <Login/>}
-                  {accessRouteRegister ? <Register/> : ''}
-                    
+                  
+                  {user && user.auth ? <Header/> : ''}   
+                  
+                  {user && user.auth ? <AppRoutes /> : ''}   
+
+                  {(user && user.auth) || accessRouteRegister || accessRouteOTP ? '' : <Login/>}  
+
+                  {accessRouteRegister ? <Register/> : ''}   
+
+                  {/* {accessRouteOTP ? <OTP/> : ''}                                         */}
+                                      
             </div>   
             <ToastContainer
                   position="top-right"

@@ -9,7 +9,7 @@ import { MdPhotoCamera } from "react-icons/md";
 import axios from 'axios';
 import { url } from '../services/UserService'
 function ModalAddDevice({ show , handleClose}) {   
-
+  const [imageURL, setImageURL] = useState('');
   const [fileName, setFileName] = useState("");
   const [idDevice,setidDevice]=useState('')   
   const [nameDevice,setnameDevice]=useState('')
@@ -30,14 +30,22 @@ function ModalAddDevice({ show , handleClose}) {
   const isDragging = useRef(false);
   const startPosition = useRef({ x: 0, y: 0 });
 
+  // const handleImageUpload = (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     const reader = new FileReader();
+  //     reader.onload = (e) => {
+  //       setImage(e.target.result);
+  //     };
+  //     reader.readAsDataURL(file);
+  //   }
+  // };
+
   const handleImageUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
+      const imageUrl = URL.createObjectURL(file); // Chuyển ảnh thành URL
+      setImage(imageUrl);
     }
   };
 
@@ -53,11 +61,14 @@ function ModalAddDevice({ show , handleClose}) {
     if (!isDragging.current) return;
     const newX = event.clientX - startPosition.current.x;
     const newY = event.clientY - startPosition.current.y;
-    setPosition({ x: newX, y: newY });
+    setPosition({ x: newX, y: newY });  
   };
 
-  const handleMouseUp = () => {
-    isDragging.current = false;
+  const handleCLOSE = () => {
+    setImage("");
+    setnameDevice("")
+    setidDevice("")                
+    handleClose();
   };
 
   const handlePostAddDevice = async () => {   
@@ -126,15 +137,15 @@ function ModalAddDevice({ show , handleClose}) {
 
           id: idDevice,
           customerPhoneNumber: phoneNumer,   
-          longitude: 0,
-          latitude: 0,
+          longitude: 0,   
+          latitude: 0,  
           name: nameDevice,
-          imagePath: "",
+          imagePath: image,
           battery: 28,
-          temperature: 0,
+          temperature: 0,    
           stolen: false,
-          bluetooth: "False",
-          timeStamp: "2025-02-23T22:30:25",
+          bluetooth: "OFF",
+          timeStamp: "2025-01-01T00:00:00",
           smsNumber: "",
           package: "",
           registationDate: "0001-01-01T00:00:00",
@@ -189,30 +200,28 @@ function ModalAddDevice({ show , handleClose}) {
             <div className="form-group">
              <div className='SettingFirst'>
                                                         <div className="Wrapimage">
-                                                        <div
-                                                            className="image-container"
-                                                            onMouseMove={handleMouseMove}
-                                                            onMouseUp={handleMouseUp}
-                                                            onMouseLeave={handleMouseUp}
-                                                          >
-                                                            {image && (
-                                                              <img
-                                                                src={image}
-                                                                alt="Uploaded"
-                                                                style={{
-                                                                  transform: `translate(${position.x}px, ${position.y}px)`,
-                                                                }}
-                                                                onMouseDown={handleMouseDown}
-                                                              />
-                                                            )}
-                                      
-                                                            
-                                                          </div>
+
+                                                       
+
                                                           <div
-                                                              className='buttonUpload'
+                                                               className="image-containerDevice"                  
+                                                          >
+                                                           {image ? ( 
+                                                                      <img src={image} alt="Uploaded" className="uploaded-imageDevice" 
+                                                                         
+                                                                      />
+                                                                    ) : (
+                                                                      <span className="placeholder-text">Chưa chọn ảnh</span>
+                                                                    )}
+                                                          </div>
+                                                          
+
+
+                                                          <div
+                                                              className='buttonUploadDevice'
                                                               onClick={() => document.getElementById("fileInput").click()}
                                                             >
-                                                              <MdPhotoCamera className='IconButtonUpload'/>
+                                                              <MdPhotoCamera className='IconButtonUploadDevice'/> 
                                                             </div>   
                                                         </div>
                                                           
@@ -251,7 +260,7 @@ function ModalAddDevice({ show , handleClose}) {
         </form>
         </Modal.Body>   
         <Modal.Footer>  
-          <Button variant="secondary" onClick={handleClose}>
+          <Button variant="secondary" onClick={handleCLOSE}>
             Đóng
           </Button>
           <Button variant="primary" 

@@ -20,6 +20,8 @@ import PositionObject from './PositionObject';
 import EditInforObject from './EditInforObject';
 import AddObject from './AddObject';
 import SafeArea from './SafeArea';
+import HistoryObject from './HistoryObject';  
+import DetailObject from './DetailObject';
 function AppRoutes() {
 
   const { user , loginContext, token, setToken, loginTotalLogin, logoutTotalLogin, LoginTotal } = useContext(UserContext);
@@ -46,17 +48,16 @@ function AppRoutes() {
                 {user && user.auth ? <Route path="/Devices/Setting/:id/ObjectTraking" element={<ObjectTracking/>} /> : '' }
                 {user && user.auth ? <Route path="/AddObjectTracking" element={<AddObjectTracking/>} /> : '' }
                 {user && user.auth ? <Route path="/Objects" element={<Objects/>} /> : '' }
+                {user && user.auth ? <Route path="/Object/Setting/:id" element={<DetailObject/>} /> : '' }
                 {user && user.auth ? <Route path="/InforObjects" element={<InforObject/>} /> : '' }
                 {user && user.auth ? <Route path="/Devices/Position/:id" element={<PositionDevice/>} /> : '' }
                 {user && user.auth ? <Route path="/HistoryDevice/:id" element={<HistoryDevice/>} /> : '' }
-                {user && user.auth ? <Route path="/HistoryDevice/:id" element={<HistoryDevice/>} /> : '' }
+                {user && user.auth ? <Route path="/HistoryObject/:id" element={<HistoryObject/>} /> : '' }   
                 {user && user.auth ? <Route path="/Notification" element={<Notification/>} /> : '' }    
                 {user && user.auth ? <Route path="/PositionObject/:id" element={<PositionObject/>} /> : '' }    
                 {user && user.auth ? <Route path="/EditInforObject" element={<EditInforObject/>} /> : '' }    
                 {user && user.auth ? <Route path="/AddObject" element={<AddObject/>} /> : '' }   
                 {user && user.auth ? <Route path="/SafeArea/:id" element={<SafeArea/>} /> : '' }   
-
-
             </Routes>          
     </div>
   )

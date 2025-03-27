@@ -18,6 +18,7 @@ import { RiChatHistoryFill } from "react-icons/ri";
 import {Link, useNavigate} from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { url } from './services/UserService';
+import * as signalR from "@microsoft/signalr";
 function PositionObject() {       
    
     const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext);
@@ -94,7 +95,7 @@ function PositionObject() {
       }
     };
 
-    const {id} = useParams(); // Lấy tham số động từ URL
+    const {id} = useParams(); // Lấy tham số động từ URL             
 
     useEffect(() => { 
        
@@ -107,16 +108,19 @@ function PositionObject() {
     useEffect(() => { 
       if(Object.id !== ''){
             getDeviceById();
+          
       }   
        
     }, [Object])  
 
     useEffect(() => { 
       if(Device.id !== ''){
-             getAddressFromCoordinates(Device.latitude,  Device.longitude );   
+             getAddressFromCoordinates(Device.latitude,  Device.longitude ); 
+             
+             setCenter({lat: Device.latitude,lng: Device.longitude })
       }
        
-    }, [Device])  
+    }, [Device])    
 
     
 
@@ -384,10 +388,6 @@ function PositionObject() {
             else{
               toast.error('Thời gian không hợp lệ')
             }
-      
-           
-
-           
         } else {
      
         }
@@ -443,8 +443,40 @@ function PositionObject() {
 
 
 
-  console.log('idObject', id)  
-  console.log(Object)
+  useEffect( () => {
+        let connection = new signalR.HubConnectionBuilder()   
+            .withUrl("https://mygps.runasp.net/NotificationHub")   
+            .withAutomaticReconnect()    
+            .build();     
+        // Bắt đầu kết nối   
+        connection.start()   
+            .then(() => {  
+              console.log("✅ Kết nối SignalR thành công!");     
+                         // Lắng nghe các sự kiện cho từng thiết bị
+            })
+            .catch(err => {
+                console.error('Kết nối thất bại: ', err);
+            });
+        // Lắng nghe sự kiện kết nối lại
+        connection.onreconnected(connectionId => {
+            console.log(`Kết nối lại thành công. Connection ID: ${connectionId}`);
+        });
+        // Lắng nghe sự kiện đang kết nối lại
+        connection.onreconnecting(error => {
+            console.warn('Kết nối đang được thử lại...', error);
+        });
+        connection.on(`SendNotification${Device.id}`, data => {
+          const obj = JSON.parse(data);
+          console.log(`📡 Dữ liệu từ thiết bị ${Device.id}:`, obj);
+           // Đợi 2 giây trước khi gọi getNotification
+          setTimeout(() => {
+            getDeviceById();  
+          }, 5000);                   
+        });               
+  
+      }, [] )
+
+
   return (   
     <div className='PositionObject'> 
       <div className='wrapPositionObject'>
@@ -474,12 +506,15 @@ function PositionObject() {
                             borderRadius: "8px",
                             boxShadow: "0 2px 5px rgba(0, 0, 0, 0.3)",
                             zIndex: 1000,
-                            fontWeight: "bold"
+                            fontWeight: "bold",
+                            width: "75%",  // Tự mở rộng theo nội dung
+                            textAlign: "center"
+                          
                           }}>
-                            {address}
+                            {Device.latitude > 0 ? `Vị trí: ${address}` : `Chưa ghi nhận vị trí`}
                           </div>
 
-
+                 
                         <TileLayer
                              attribution ='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -538,15 +573,15 @@ function PositionObject() {
                     </MapContainer>
       </div>
       <div className='filter'>        
-                     <div className='filterItem'>
+                     <div className='filterItem'>  
                                 <div className='filterItemdiv'>
-                                  <Link to={`/HistoryObject/$`}>
+                                  <Link to={`/HistoryObject/${id}`}>
                                     <div className = 'itemObjectSecondItem'>
                                       <div>
                                           <RiChatHistoryFill className='itemObjectSecondItemIcon'/>
                                       </div>
-                                      <div>
-                                          Lộ trình di chuyển    
+                                      <div className='itemObjectSecondItemText'>
+                                          Lộ trình    
                                       </div>
                                     </div>
                                   </Link>
@@ -556,27 +591,27 @@ function PositionObject() {
                                   <Link to={`/SafeArea/${id}`}>        
                                     <div className = 'itemObjectSecondItem'>
                                       <div>
-                                          <RiChatHistoryFill className='itemObjectSecondItemIcon'/>
+                                          <GiPositionMarker className='itemObjectSecondItemIcon'/>
                                       </div>
-                                      <div>
+                                      <div className='itemObjectSecondItemText'>
                                           Vùng an toàn  
                                       </div>
                                     </div>
                                   </Link>
                                 </div>
 
-                                <div className='filterItemdiv'>
+                                {/* <div className='filterItemdiv'>
                                    <Link to={`/Objects/Setting/${id}`}>        
                                     <div className = 'itemObjectSecondItem'>
                                       <div>
                                           <IoMdSettings className='itemObjectSecondItemIcon'/>
                                       </div>
-                                      <div>  
+                                      <div className='itemObjectSecondItemText'>  
                                           Thiết lập thiết bị  
                                       </div>
                                     </div>
                                   </Link>  
-                                </div>   
+                                </div>    */}
                          
                                                             
                      </div>

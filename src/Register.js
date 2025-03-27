@@ -18,7 +18,7 @@ function Register() {
     const [password, setpassword]=useState('')         
     const [phone, setPhone]=useState('')
     const [userRegister, setuserRegister] = useState({userName:''})
-    const { user, loginContext , setaccessRouteRegister} = useContext(UserContext);
+    const { user, loginContext , setaccessRouteRegister , accessRouteOTP, setaccessRouteOTP } = useContext(UserContext);
     const [loading, setLoading] = useState(false); // Thêm trạng thái loading
     const [ListAllCustomer, setListAllCustomer] = useState([]); 
     
@@ -58,9 +58,16 @@ function Register() {
     };
 
     const handleSubcribe = () => {
-      if(phone === '' || userName === '' || password === '' ){
+      if(phone === '' || userName === '' || password === '' ){  
         toast.error('Bạn chưa nhập đủ thông tin')  
         return  
+      }
+
+      // Kiểm tra số điện thoại
+      const phoneRegex = /^0\d{9}$/; // Bắt đầu bằng 0 và có đúng 10 chữ số
+      if (!phoneRegex.test(phone)) {
+        toast.error("Số điện thoại không hợp lệ!");
+        return;
       }
 
       if(ListAllCustomer.length > 0){
@@ -75,22 +82,40 @@ function Register() {
             return
           }
      
-      setLoading(true); // Bắt đầu trạng thái tải
-      setuserRegister({  
-        phoneNumber:phone,
-        userName:userName,
-        password:password
-        })
-      }
-      else{
-        setLoading(true); // Bắt đầu trạng thái tải
+        setLoading(true); // Bắt đầu trạng thái tải  
+
+
         setuserRegister({  
           phoneNumber:phone,
           userName:userName,
           password:password
-          })
+        })
+
+         // Chuyển hướng sang trang OTP, truyền số điện thoại qua state
+        // setaccessRouteRegister(false)
+        // sessionStorage.setItem('accessRegister', false);
+        // setaccessRouteOTP(true) 
+        // navigate('/otp', { state: { phoneNumber: phone } });
+
       }
 
+
+      else{
+          setLoading(true); // Bắt đầu trạng thái tải
+
+          setuserRegister({    
+            phoneNumber:phone,
+            userName:userName,
+            password:password
+          })
+
+           // Chuyển hướng sang trang OTP, truyền số điện thoại qua state
+          // setaccessRouteRegister(false)
+          // sessionStorage.setItem('accessRegister', false);
+          // setaccessRouteOTP(true) 
+          // navigate('/otp', { state: { phoneNumber: phone } });
+      }
+     
      
     }
 
@@ -105,7 +130,7 @@ function Register() {
     GetAllCustomer()
     const accessRegister = sessionStorage.getItem('accessRegister');
     if(accessRegister){
-       setaccessRouteRegister(accessRegister)   
+      //  setaccessRouteRegister(accessRegister)   
     }
    
   },[ ])
@@ -161,43 +186,19 @@ function Register() {
                                 onChange={(e) => setpassword(e.target.value)}
                       />
                     </div>
-                    {/* <div class="rowRegister">
-                      <i class="fas fa-lock">
-                        <FaLock/>
-                      </i>   
-                      <input 
-                                type = 'password' 
-                                placeholder="Xác nhận lại mật khẩu" 
-                                value={password}
-                                onChange={(e) => setpassword(e.target.value)}
-                      />
-                    </div> */}
+                   
                     <div class="rowRegister buttonRegister">
+
                       <button   
                                 className='button-loginRegister'
                                 onClick={handleSubcribe}
                                 disabled={loading} // Vô hiệu hóa nút khi đang tải
                                 >
-                          Đăng ký
+                          Đăng ký                
                       </button>
                   
                     </div>
-                    {/* <div class="wrapregister">
-                        <div className='containerRegister'>
-                          <div>
-                              Bạn chưa có mật khẩu?
-                          </div>
-                          <div   
-                                className='buttonRegister'
-                                onClick={handleRegister}>
-                                Đăng kí ngay
-                          </div> 
-                        </div>                  
-                    </div> */}
-
                    
-                    
-                    
                   </div>
                 </div>  
         </div>

@@ -16,6 +16,7 @@ import axios from 'axios';
 import { url } from './services/UserService'
 import {  toast } from 'react-toastify';
 import { useNavigate, useLocation  } from 'react-router-dom';
+import { MdOutlineStickyNote2 } from "react-icons/md";
 function AddObject() {    
   
     const navigate = useNavigate();
@@ -79,13 +80,12 @@ function AddObject() {
           const handleImageUpload = (event) => {
             const file = event.target.files[0];
             if (file) {
-              const reader = new FileReader();
-              reader.onload = (e) => {
-                setImage(e.target.result);
-              };
-              reader.readAsDataURL(file);
+              const imageUrl = URL.createObjectURL(file); // Chuyển ảnh thành URL
+              setImage(imageUrl);
             }
           };
+
+
         
           const handleMouseDown = (event) => {
             isDragging.current = true;
@@ -116,7 +116,7 @@ function AddObject() {
                   longitude: 0,
                   latitude: 0,
                   description: descriptionObject,  
-                  imagePath: "string",
+                  imagePath: image,
                   safeRadius: 0,
                   size: "string"
               });
@@ -158,40 +158,38 @@ function AddObject() {
 
                           <div className='fatherAddImage'>
                                             <div className="Wrapimage">
-                                            <div
-                                                className="image-container"
-                                                onMouseMove={handleMouseMove}
-                                                onMouseUp={handleMouseUp}
-                                                onMouseLeave={handleMouseUp}
-                                              >
-                                                {image && (
-                                                  <img
-                                                    src={image}
-                                                    alt="Uploaded"
-                                                    style={{
-                                                      transform: `translate(${position.x}px, ${position.y}px)`,
-                                                    }}
-                                                    onMouseDown={handleMouseDown}
-                                                  />
-                                                )}
-                          
-                                                
-                                              </div>
-                                              <div
-                                                  className='buttonUpload'
-                                                  onClick={() => document.getElementById("fileInput").click()}
-                                                >
-                                                  <MdPhotoCamera className='IconButtonUpload'/>
-                                                </div>   
-                                            </div>
-                                              
-                                              <input
-                                                type="file"
-                                                id="fileInput"
-                                                style={{ display: "none" }}
-                                                accept="image/*"
-                                                onChange={handleImageUpload}
-                                              />
+                                            
+                                                                                                   
+                                            
+                                                                                                      <div
+                                                                                                           className="image-containerDevice"                  
+                                                                                                      >
+                                                                                                       {image ? ( 
+                                                                                                                  <img src={image} alt="Uploaded" className="uploaded-imageDevice" 
+                                                                                                                     
+                                                                                                                  />
+                                                                                                                ) : (
+                                                                                                                  <span className="placeholder-text">Chưa chọn ảnh</span>
+                                                                                                                )}
+                                                                                                      </div>
+                                                                                                      
+                                            
+                                            
+                                                                                                      <div
+                                                                                                          className='buttonUploadDevice'
+                                                                                                          onClick={() => document.getElementById("fileInput").click()}
+                                                                                                        >
+                                                                                                          <MdPhotoCamera className='IconButtonUploadDevice'/> 
+                                                                                                        </div>   
+                                                                                                    </div>
+                                                                                                        
+                                                                                                      <input
+                                                                                                        type="file"
+                                                                                                        id="fileInput"
+                                                                                                        style={{ display: "none" }}
+                                                                                                        accept="image/*"
+                                                                                                        onChange={handleImageUpload}
+                                                                                                      />
                           
                                               
                                               
@@ -220,7 +218,7 @@ function AddObject() {
                         <div className='wrapAddObjectItem'>
                           <div className='wrapAddObjectItemFirst'>  
                               <div className='divIconAddObject'>
-                                  {/* <LuNotebookText className='IconAddObject'/> */}
+                                  <MdOutlineStickyNote2 className='IconAddObject'/>
                               </div>  
                               <div className='titleAddObject'>Mô tả:</div>
                           </div> 

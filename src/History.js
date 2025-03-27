@@ -13,6 +13,7 @@ import { ToastContainer } from 'react-toastify';
 import {  toast } from 'react-toastify';
 import { UserContext } from './usercontext';  
 import { url } from './services/UserService'; 
+
 function History() {  
     const {setPercentBattery, makerOpenPopup, setMakerOpenPopup } = useContext(UserContext);
     // const url = 'https://sawacoapi.azurewebsites.net' 

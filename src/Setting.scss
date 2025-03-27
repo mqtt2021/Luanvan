@@ -65,22 +65,19 @@
               justify-content: center;
               align-items: center;
               position: relative;   
-              .image-container {  
-                width:  200px;
-                height: 200px;                
-                border: 2px solid #ccc;
-                border-radius: 50%;
-                overflow: hidden;
+              .image-containerDevice {  
+                width: 300px;  /* Chiều rộng cố định */
+                height: 200px; /* Chiều cao cố định */
+                overflow: hidden; /* Tránh bị tràn nội dung */
+                display: flex;
+                align-items: center; /* Canh giữa ảnh theo chiều dọc */
+                justify-content: center; /* Canh giữa ảnh theo chiều ngang */
+                background-color: #f0f0f0; /* Màu nền để dễ nhìn */
+                border: 2px solid #000000;
                 position: relative;
-                background-color: #f4f4f4;
-                position: relative;
-
-                img {
-                  position: absolute;
-                  cursor: grab;
-                  &:active{
-                    cursor: grabbing;  
-                  }
+                .uploaded-imageDevice {
+                  width: 100%; /* Chiều ngang đầy đủ theo div */
+                  height: auto; /* Giữ tỷ lệ ảnh, không bị méo */
                 }
                
             }
@@ -93,16 +90,28 @@
                   cursor: pointer;
               }
 
-              .IconButtonUpload{
-                      font-size: 40px;
-                     
-                     
+              .buttonUploadDevice{
+                z-index: 1000;
+                position: absolute;
+                bottom: -5px;
+                right: -40px;           
+                
+                &:hover{
+                    cursor: pointer;
+                }
+            
+                .IconButtonUploadDevice{
+                        font-size: 40px;
+                        z-index: 1000;
+                        color: #000000;
+                       
+                }
               }
             }
             }
               .divChangeNameDevice{     
                 margin-top: 10px;   
-                width: 19%;  
+                width: 25%;  
                 position: relative;
                 .iconPen{
                   position: absolute;
@@ -112,6 +121,11 @@
                   &:hover{
                     cursor: pointer;
                   }
+                }
+
+                @media (max-width: 768px) {   
+                  width: 45%;
+  
                 }
                              
               }

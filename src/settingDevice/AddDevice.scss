@@ -13,42 +13,40 @@
     justify-content: center;
     align-items: center;
     position: relative;   
-    .image-container {  
-      width:  200px;
-      height: 200px;
-      
-      border: 2px solid #ccc;
-      border-radius: 50%;
-      overflow: hidden;
+    .image-containerDevice {  
+      width: 300px;  /* Chiều rộng cố định */
+      height: 200px; /* Chiều cao cố định */
+      overflow: hidden; /* Tránh bị tràn nội dung */
+      display: flex;
+      align-items: center; /* Canh giữa ảnh theo chiều dọc */
+      justify-content: center; /* Canh giữa ảnh theo chiều ngang */
+      background-color: #f0f0f0; /* Màu nền để dễ nhìn */
+      border: 2px solid #000000;
       position: relative;
-      background-color: #f4f4f4;
-      position: relative;
-
-      img {
-        position: absolute;
-        cursor: grab;
-        &:active{
-          cursor: grabbing;  
-        }
+      .uploaded-imageDevice {
+        width: 100%; /* Chiều ngang đầy đủ theo div */
+        height: auto; /* Giữ tỷ lệ ảnh, không bị méo */
       }
      
   }
-  .buttonUpload{
+  .buttonUploadDevice{
     z-index: 1000;
     position: absolute;
-    bottom: 0;
-    right: 0;
+    bottom: -5px;
+    right: -40px;           
     
     &:hover{
         cursor: pointer;
     }
 
-    .IconButtonUpload{
+    .IconButtonUploadDevice{
             font-size: 40px;
-           
+            z-index: 1000;
+            color: #000000;
            
     }
   }
+  
   }
   
  
